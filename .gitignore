@@ -1,6 +1,5 @@
-# Virtual Environment
+# Virtual Environment (but keep our env/ directory)
 venv/
-env/
 ENV/
 
 # Python cache

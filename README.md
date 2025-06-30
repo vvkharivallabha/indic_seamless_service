@@ -6,6 +6,28 @@ A production-ready REST API service for speech-to-text conversion using the [ai4
 
 ## 🚀 Quick Start
 
+> 💡 **Pro Tip**: Use `make help` to see all available commands!
+
+### **🚀 Option 1: Using Makefile (Recommended)**
+
+```bash
+# Setup environment and deploy with Docker
+make setup
+make deploy-local
+
+# Or for development mode
+make setup
+make run-local
+
+# Run tests
+make test
+
+# View all available commands
+make help
+```
+
+### **🔧 Option 2: Manual Setup**
+
 1. **Set up your environment:**
    ```bash
    cd env
@@ -32,11 +54,9 @@ A production-ready REST API service for speech-to-text conversion using the [ai4
 
 3. **Test the service:**
    ```bash
-   python workflow_test.py
+   python tests/workflow_test.py
    # or
-   python test_stt_only.py
-   # or
-   python client_example.py
+   python examples/client_example.py
    ```
 
 ---
@@ -83,11 +103,11 @@ curl -X POST "http://localhost:8000/speech-to-text" \
 - Place audio files in the service directory (e.g., `test_audio.wav`, `sample.mp3`)
 - Run:
   ```bash
-  python workflow_test.py
+  python tests/workflow_test.py
   # or test a specific file
-  python workflow_test.py --audio your_audio.wav
+  python tests/workflow_test.py --audio your_audio.wav
   # or test a different service URL
-  python workflow_test.py --url http://localhost:8001
+  python tests/workflow_test.py --url http://localhost:8001
   ```
 
 ---
@@ -99,7 +119,7 @@ curl -X POST "http://localhost:8000/speech-to-text" \
 ### Docker Deployment
 ```bash
 # Automated Docker deployment
-./deploy-local.sh
+./scripts/deploy-local.sh
 
 # Manual Docker build and run
 docker build -t indic-seamless-stt .
@@ -109,7 +129,7 @@ docker run -p 8000:5000 indic-seamless-stt
 ### Direct Python (Development)
 ```bash
 # For development without Docker
-./run-local.sh
+./scripts/run-local.sh
 
 # Or manually
 conda activate indic-seamless
@@ -193,7 +213,7 @@ source env/activate.sh
 python start_service.py
 
 # In another terminal, test your changes
-python workflow_test.py
+python tests/workflow_test.py
 ```
 
 #### Environment Management
@@ -216,7 +236,7 @@ python benchmark.py
 #### Test Docker Build Locally
 ```bash
 # Build and run with Docker
-./deploy-local.sh
+./scripts/deploy-local.sh
 
 # Check service status
 curl http://localhost:5000/health
@@ -241,7 +261,7 @@ docker run -d \
   indic-seamless-service:latest
 
 # Test the service
-python client_example.py
+python examples/client_example.py
 ```
 
 ### **Production Deployment Workflow**
@@ -370,34 +390,44 @@ pre-commit run --all-files
 
 ## Project Structure
 
+> 📋 **Detailed Structure**: See [`PROJECT_STRUCTURE.md`](PROJECT_STRUCTURE.md) for comprehensive project organization.
+
 ```
 indic_seamless_service/
-├── app.py                 # Main FastAPI application
-├── start_service.py       # Service startup script
-├── client_example.py      # Python client example
-├── workflow_test.py       # Comprehensive test script
-├── test_service.py        # Service test suite
-├── deploy-local.sh        # Docker deployment script
-├── run-local.sh           # Development deployment (no Docker)
-├── Dockerfile             # Docker configuration
-├── README.md              # This file
-├── WORKFLOWS.md           # Workflow reference guide
-├── DEPENDENCIES.md        # Dependency documentation
-├── TROUBLESHOOTING.md     # Troubleshooting guide
-├── DOCKER_TROUBLESHOOTING.md # Docker-specific troubleshooting
-├── .gitignore             # Git ignore rules
-├── env/                   # Environment management
-│   ├── setup.sh           # Environment setup script
-│   ├── activate.sh        # Environment activation helper
-│   ├── benchmark.py       # Performance benchmark tool
-│   ├── requirements.in    # Dependency specifications
-│   └── requirements.txt   # Pinned dependencies
-├── aws/                   # AWS deployment templates
-│   ├── deploy.sh          # AWS ECS deployment script
-│   └── cloudformation.yaml
-├── terraform/             # Terraform configurations
-│   └── main.tf
-└── sagemaker/             # SageMaker deployment scripts
+├── 📄 README.md              # This file - main documentation
+├── 📄 PROJECT_STRUCTURE.md   # Detailed project organization
+├── 📄 app.py                 # Main FastAPI application
+├── 📄 start_service.py       # Service startup script
+├── 📄 Dockerfile             # Docker configuration
+├── 📄 .gitignore             # Git ignore rules
+│
+├── 📁 docs/                  # Documentation
+│   ├── WORKFLOWS.md          # Development workflows
+│   ├── DEPENDENCIES.md       # Dependency management
+│   ├── TROUBLESHOOTING.md    # General troubleshooting
+│   └── DOCKER_TROUBLESHOOTING.md # Docker help
+│
+├── 📁 env/                   # Environment management
+│   ├── setup.sh              # Environment setup
+│   ├── activate.sh           # Quick activation
+│   ├── benchmark.py          # Performance testing
+│   ├── requirements.in       # Dependencies
+│   └── requirements.txt      # Pinned versions
+│
+├── 📁 scripts/               # Deployment scripts
+│   ├── deploy-local.sh       # Docker deployment
+│   └── run-local.sh          # Development mode
+│
+├── 📁 tests/                 # Test suite
+│   ├── test_service.py       # Unit tests
+│   └── workflow_test.py      # Integration tests
+│
+├── 📁 examples/              # Usage examples
+│   └── client_example.py     # Client implementation
+│
+├── 📁 aws/                   # AWS deployment
+├── 📁 terraform/             # Infrastructure as code
+└── 📁 sagemaker/             # SageMaker deployment
 ```
 
 ## Development & Contribution
