@@ -95,6 +95,7 @@ curl -X POST "http://localhost:8000/speech-to-text" \
 
 - **Audio formats:** WAV, MP3, FLAC, M4A, OGG
 - **Languages:** 100+ including all major Indian and many international languages
+- **FastAPI Docs:** Interactive dropdown now shows full language names (e.g., "Hindi", "Bengali", "Tamil") instead of codes
 
 ---
 
