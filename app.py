@@ -41,105 +41,208 @@ class LanguagesResponse(BaseModel):
     count: int
 
 # Supported languages enum for dropdown in FastAPI docs
+# The enum values (what users see in dropdown) are now the full language names
 class TargetLanguage(str, Enum):
-    Afrikaans = "afr"
-    Amharic = "amh"
-    Modern_Standard_Arabic = "arb"
-    Moroccan_Arabic = "ary"
-    Egyptian_Arabic = "arz"
-    Assamese = "asm"
-    North_Azerbaijani = "azj"
-    Belarusian = "bel"
-    Bengali = "ben"
-    Bosnian = "bos"
-    Bulgarian = "bul"
-    Catalan = "cat"
-    Cebuano = "ceb"
-    Czech = "ces"
-    Central_Kurdish = "ckb"
-    Mandarin_Chinese = "cmn"
-    Traditional_Chinese = "cmn_Hant"
-    Welsh = "cym"
-    Danish = "dan"
-    German = "deu"
-    Greek = "ell"
-    English = "eng"
-    Estonian = "est"
-    Basque = "eus"
-    Finnish = "fin"
-    French = "fra"
-    Nigerian_Fulfulde = "fuv"
-    West_Central_Oromo = "gaz"
-    Irish = "gle"
-    Galician = "glg"
-    Gujarati = "guj"
-    Hebrew = "heb"
-    Hindi = "hin"
-    Croatian = "hrv"
-    Hungarian = "hun"
-    Armenian = "hye"
-    Igbo = "ibo"
-    Indonesian = "ind"
-    Icelandic = "isl"
-    Italian = "ita"
-    Javanese = "jav"
-    Japanese = "jpn"
-    Kannada = "kan"
-    Georgian = "kat"
-    Kazakh = "kaz"
-    Halh_Mongolian = "khk"
-    Khmer = "khm"
-    Kyrgyz = "kir"
-    Korean = "kor"
-    Lao = "lao"
-    Lithuanian = "lit"
-    Ganda = "lug"
-    Luo = "luo"
-    Standard_Latvian = "lvs"
-    Maithili = "mai"
-    Malayalam = "mal"
-    Marathi = "mar"
-    Macedonian = "mkd"
-    Maltese = "mlt"
-    Manipuri = "mni"
-    Burmese = "mya"
-    Dutch = "nld"
-    Norwegian_Nynorsk = "nno"
-    Norwegian_Bokmal = "nob"
-    Nepali = "npi"
-    Nyanja = "nya"
-    Odia = "ory"
-    Punjabi = "pan"
-    Southern_Pashto = "pbt"
-    Western_Persian = "pes"
-    Polish = "pol"
-    Portuguese = "por"
-    Romanian = "ron"
-    Russian = "rus"
-    Santali = "sat"
-    Slovak = "slk"
-    Slovenian = "slv"
-    Shona = "sna"
-    Sindhi = "snd"
-    Somali = "som"
-    Spanish = "spa"
-    Serbian = "srp"
-    Swedish = "swe"
-    Swahili = "swh"
-    Tamil = "tam"
-    Telugu = "tel"
-    Tajik = "tgk"
-    Tagalog = "tgl"
-    Thai = "tha"
-    Turkish = "tur"
-    Ukrainian = "ukr"
-    Urdu = "urd"
-    Northern_Uzbek = "uzn"
-    Vietnamese = "vie"
-    Yoruba = "yor"
-    Cantonese = "yue"
-    Colloquial_Malay = "zlm"
-    Zulu = "zul"
+    Afrikaans = "Afrikaans"
+    Amharic = "Amharic"
+    Modern_Standard_Arabic = "Modern Standard Arabic"
+    Moroccan_Arabic = "Moroccan Arabic"
+    Egyptian_Arabic = "Egyptian Arabic"
+    Assamese = "Assamese"
+    North_Azerbaijani = "North Azerbaijani"
+    Belarusian = "Belarusian"
+    Bengali = "Bengali"
+    Bosnian = "Bosnian"
+    Bulgarian = "Bulgarian"
+    Catalan = "Catalan"
+    Cebuano = "Cebuano"
+    Czech = "Czech"
+    Central_Kurdish = "Central Kurdish"
+    Mandarin_Chinese = "Mandarin Chinese"
+    Traditional_Chinese = "Traditional Chinese"
+    Welsh = "Welsh"
+    Danish = "Danish"
+    German = "German"
+    Greek = "Greek"
+    English = "English"
+    Estonian = "Estonian"
+    Basque = "Basque"
+    Finnish = "Finnish"
+    French = "French"
+    Nigerian_Fulfulde = "Nigerian Fulfulde"
+    West_Central_Oromo = "West Central Oromo"
+    Irish = "Irish"
+    Galician = "Galician"
+    Gujarati = "Gujarati"
+    Hebrew = "Hebrew"
+    Hindi = "Hindi"
+    Croatian = "Croatian"
+    Hungarian = "Hungarian"
+    Armenian = "Armenian"
+    Igbo = "Igbo"
+    Indonesian = "Indonesian"
+    Icelandic = "Icelandic"
+    Italian = "Italian"
+    Javanese = "Javanese"
+    Japanese = "Japanese"
+    Kannada = "Kannada"
+    Georgian = "Georgian"
+    Kazakh = "Kazakh"
+    Halh_Mongolian = "Halh Mongolian"
+    Khmer = "Khmer"
+    Kyrgyz = "Kyrgyz"
+    Korean = "Korean"
+    Lao = "Lao"
+    Lithuanian = "Lithuanian"
+    Ganda = "Ganda"
+    Luo = "Luo"
+    Standard_Latvian = "Standard Latvian"
+    Maithili = "Maithili"
+    Malayalam = "Malayalam"
+    Marathi = "Marathi"
+    Macedonian = "Macedonian"
+    Maltese = "Maltese"
+    Manipuri = "Manipuri"
+    Burmese = "Burmese"
+    Dutch = "Dutch"
+    Norwegian_Nynorsk = "Norwegian Nynorsk"
+    Norwegian_Bokmal = "Norwegian Bokmål"
+    Nepali = "Nepali"
+    Nyanja = "Nyanja"
+    Odia = "Odia"
+    Punjabi = "Punjabi"
+    Southern_Pashto = "Southern Pashto"
+    Western_Persian = "Western Persian"
+    Polish = "Polish"
+    Portuguese = "Portuguese"
+    Romanian = "Romanian"
+    Russian = "Russian"
+    Santali = "Santali"
+    Slovak = "Slovak"
+    Slovenian = "Slovenian"
+    Shona = "Shona"
+    Sindhi = "Sindhi"
+    Somali = "Somali"
+    Spanish = "Spanish"
+    Serbian = "Serbian"
+    Swedish = "Swedish"
+    Swahili = "Swahili"
+    Tamil = "Tamil"
+    Telugu = "Telugu"
+    Tajik = "Tajik"
+    Tagalog = "Tagalog"
+    Thai = "Thai"
+    Turkish = "Turkish"
+    Ukrainian = "Ukrainian"
+    Urdu = "Urdu"
+    Northern_Uzbek = "Northern Uzbek"
+    Vietnamese = "Vietnamese"
+    Yoruba = "Yoruba"
+    Cantonese = "Cantonese"
+    Colloquial_Malay = "Colloquial Malay"
+    Zulu = "Zulu"
+
+# Mapping from full language names back to language codes for the model
+LANGUAGE_NAME_TO_CODE = {
+    "Afrikaans": "afr",
+    "Amharic": "amh",
+    "Modern Standard Arabic": "arb",
+    "Moroccan Arabic": "ary",
+    "Egyptian Arabic": "arz",
+    "Assamese": "asm",
+    "North Azerbaijani": "azj",
+    "Belarusian": "bel",
+    "Bengali": "ben",
+    "Bosnian": "bos",
+    "Bulgarian": "bul",
+    "Catalan": "cat",
+    "Cebuano": "ceb",
+    "Czech": "ces",
+    "Central Kurdish": "ckb",
+    "Mandarin Chinese": "cmn",
+    "Traditional Chinese": "cmn_Hant",
+    "Welsh": "cym",
+    "Danish": "dan",
+    "German": "deu",
+    "Greek": "ell",
+    "English": "eng",
+    "Estonian": "est",
+    "Basque": "eus",
+    "Finnish": "fin",
+    "French": "fra",
+    "Nigerian Fulfulde": "fuv",
+    "West Central Oromo": "gaz",
+    "Irish": "gle",
+    "Galician": "glg",
+    "Gujarati": "guj",
+    "Hebrew": "heb",
+    "Hindi": "hin",
+    "Croatian": "hrv",
+    "Hungarian": "hun",
+    "Armenian": "hye",
+    "Igbo": "ibo",
+    "Indonesian": "ind",
+    "Icelandic": "isl",
+    "Italian": "ita",
+    "Javanese": "jav",
+    "Japanese": "jpn",
+    "Kannada": "kan",
+    "Georgian": "kat",
+    "Kazakh": "kaz",
+    "Halh Mongolian": "khk",
+    "Khmer": "khm",
+    "Kyrgyz": "kir",
+    "Korean": "kor",
+    "Lao": "lao",
+    "Lithuanian": "lit",
+    "Ganda": "lug",
+    "Luo": "luo",
+    "Standard Latvian": "lvs",
+    "Maithili": "mai",
+    "Malayalam": "mal",
+    "Marathi": "mar",
+    "Macedonian": "mkd",
+    "Maltese": "mlt",
+    "Manipuri": "mni",
+    "Burmese": "mya",
+    "Dutch": "nld",
+    "Norwegian Nynorsk": "nno",
+    "Norwegian Bokmål": "nob",
+    "Nepali": "npi",
+    "Nyanja": "nya",
+    "Odia": "ory",
+    "Punjabi": "pan",
+    "Southern Pashto": "pbt",
+    "Western Persian": "pes",
+    "Polish": "pol",
+    "Portuguese": "por",
+    "Romanian": "ron",
+    "Russian": "rus",
+    "Santali": "sat",
+    "Slovak": "slk",
+    "Slovenian": "slv",
+    "Shona": "sna",
+    "Sindhi": "snd",
+    "Somali": "som",
+    "Spanish": "spa",
+    "Serbian": "srp",
+    "Swedish": "swe",
+    "Swahili": "swh",
+    "Tamil": "tam",
+    "Telugu": "tel",
+    "Tajik": "tgk",
+    "Tagalog": "tgl",
+    "Thai": "tha",
+    "Turkish": "tur",
+    "Ukrainian": "ukr",
+    "Urdu": "urd",
+    "Northern Uzbek": "uzn",
+    "Vietnamese": "vie",
+    "Yoruba": "yor",
+    "Cantonese": "yue",
+    "Colloquial Malay": "zlm",
+    "Zulu": "zul"
+}
 
 # Initialize FastAPI app
 app = FastAPI(
@@ -406,7 +509,12 @@ async def speech_to_text(
         if not allowed_file(audio.filename or ""):
             raise HTTPException(status_code=400, detail=f"Invalid file format. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
         
-        # Note: target_lang validation is now handled by the TargetLanguage enum
+        # Convert full language name to language code for the model
+        language_code = LANGUAGE_NAME_TO_CODE.get(target_lang.value)
+        if not language_code:
+            raise HTTPException(status_code=400, detail=f"Unsupported language: {target_lang.value}")
+        
+        logger.info(f"Processing audio with target language: {target_lang.value} (code: {language_code})")
         
         # Save and preprocess audio
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
@@ -428,7 +536,7 @@ async def speech_to_text(
         with torch.no_grad():
             text_out = model.generate(
                 **inputs,
-                tgt_lang=target_lang
+                tgt_lang=language_code  # Use the language code for the model
             )
         
         # Decode transcription
