@@ -1,0 +1,38 @@
+# Core dependencies
+torch
+torchaudio
+transformers
+accelerate
+tiktoken
+blobfile
+sentencepiece
+
+# Audio processing
+librosa
+soundfile
+numpy
+
+# Web framework (FastAPI)
+fastapi
+uvicorn[standard]
+python-multipart
+
+# Utilities
+requests
+python-dotenv
+gunicorn
+
+# AWS dependencies (for deployment)
+boto3
+botocore
+sagemaker
+
+# Monitoring and logging
+structlog
+prometheus-client
+
+# Development and testing dependencies
+pytest
+pytest-asyncio
+black
+flake8 
