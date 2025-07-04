@@ -1,0 +1,100 @@
+{
+  // Python configuration
+  "python.defaultInterpreterPath": "./env/.venv/bin/python",
+  "python.terminal.activateEnvironment": true,
+  "python.pythonPath": "./env/.venv/bin/python",
+
+  // Linting configuration
+  "python.linting.enabled": true,
+  "python.linting.lintOnSave": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.pylintEnabled": false,
+  "python.linting.pycodestyleEnabled": false,
+  "python.linting.banditEnabled": false,
+  "python.linting.mypyEnabled": false,
+
+  // Flake8 settings (matching project configuration)
+  "python.linting.flake8Args": ["--max-line-length=88", "--ignore=E203,W503"],
+
+  // Formatting configuration
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": ["--line-length=88"],
+
+  // Format on save
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+
+  // Auto-fix on save
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit",
+    "source.fixAll": "explicit"
+  },
+
+  // File associations
+  "files.associations": {
+    "*.py": "python",
+    "requirements*.txt": "pip-requirements",
+    "requirements*.in": "pip-requirements"
+  },
+
+  // Exclude patterns
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".mypy_cache": true,
+    ".pytest_cache": true,
+    "env/.venv": true
+  },
+
+  // Search exclude patterns
+  "search.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true,
+    ".mypy_cache": true,
+    ".pytest_cache": true,
+    "env/.venv": true
+  },
+
+  // Type checking and IntelliSense settings
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.typeCheckingMode": "basic",
+  "python.analysis.autoSearchPaths": true,
+  "python.analysis.extraPaths": ["./src"],
+  "python.analysis.diagnosticMode": "workspace",
+
+  // Terminal settings
+  "terminal.integrated.cwd": "${workspaceFolder}",
+
+  // Git settings
+  "git.ignoreLimitWarning": true,
+
+  // JSON formatting
+  "[json]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // YAML formatting
+  "[yaml]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+
+  // Markdown formatting
+  "[markdown]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.wordWrap": "on"
+  },
+
+  // Cursor Pyright configuration
+  "cursorpyright.analysis.autoImportCompletions": true,
+  "cursorpyright.analysis.autoSearchPaths": true,
+  "cursorpyright.analysis.typeCheckingMode": "basic",
+  "cursorpyright.analysis.extraPaths": ["./src"],
+  "cursorpyright.analysis.diagnosticMode": "workspace",
+
+  // Makefile configuration
+  "makefile.configureOnOpen": false
+}

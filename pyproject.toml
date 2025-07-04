@@ -1,0 +1,164 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "indic-seamless-service"
+version = "0.1.0"
+description = "A production-ready REST API service for speech-to-text conversion using the ai4bharat/indic-seamless model"
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = ["speech-to-text", "ai4bharat", "indic-languages", "fastapi", "ml", "huggingface"]
+authors = [
+    {name = "Indic Seamless Service Team"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Web Environment",
+    "Framework :: FastAPI",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+dependencies = [
+    "torch>=2.7.0,<2.8.0",
+    "torchaudio>=2.7.0,<2.8.0",
+    "transformers>=4.50.0,<4.60.0",
+    "fastapi>=0.110.0,<0.120.0",
+    "uvicorn[standard]>=0.30.0,<0.40.0",
+    "python-multipart>=0.0.20,<0.1.0",
+    "librosa>=0.10.0,<0.12.0",
+    "numpy>=1.26.0,<2.0.0",
+    "requests>=2.32.0,<3.0.0",
+    "huggingface-hub>=0.33.0,<0.40.0",
+    "pydantic>=2.0.0,<3.0.0",
+    "python-dotenv>=1.0.0,<2.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.20.0",
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.0.0",
+]
+
+aws = [
+    "boto3>=1.35.0,<2.0.0",
+    "sagemaker>=2.200.0,<3.0.0",
+    "gunicorn>=22.0.0,<24.0.0",
+]
+
+prod = [
+    "gunicorn>=22.0.0,<24.0.0",
+    "prometheus-client>=0.20.0,<1.0.0",
+    "structlog>=24.0.0,<26.0.0",
+]
+
+all = [
+    "indic-seamless-service[dev,aws,prod]",
+]
+
+[project.urls]
+Homepage = "https://github.com/ai4bharat/indic-seamless"
+Repository = "https://github.com/ai4bharat/indic-seamless"
+Documentation = "https://github.com/ai4bharat/indic-seamless#readme"
+Issues = "https://github.com/ai4bharat/indic-seamless/issues"
+
+[project.scripts]
+indic-seamless-service = "start_service:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/",
+    "app*.py",
+    "start_service.py",
+    "pyproject.toml",
+    "README.md",
+    "Makefile",
+    "Dockerfile",
+    "env/requirements*.txt",
+    "env/requirements.in",
+    "scripts/",
+    "tests/",
+    "examples/",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+  | env
+)/
+'''
+
+[tool.flake8]
+max-line-length = 88
+extend-ignore = ["E203", "W503"]
+exclude = [".git", "__pycache__", ".venv", "env", "build", "dist"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q --strict-markers"
+testpaths = ["tests"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+exclude = [
+    "env/",
+    "build/",
+    "dist/",
+]
+
+[[tool.mypy.overrides]]
+module = [
+    "torch.*",
+    "torchaudio.*",
+    "transformers.*",
+    "librosa.*",
+    "soundfile.*",
+    "numpy.*",
+    "scipy.*",
+]
+ignore_missing_imports = true
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.20.0",
+    "black>=24.0.0",
+    "flake8>=7.0.0",
+    "mypy>=1.8.0",
+    "pre-commit>=3.0.0",
+]
+
+# uv configuration is handled via command line and environment variables 

@@ -35,4 +35,16 @@ prometheus-client
 pytest
 pytest-asyncio
 black
-flake8 
+flake8
+
+# Additional dependencies for Hugging Face authentication
+huggingface-hub
+
+# Dependencies needed for the structured app
+pydantic
+starlette
+
+# Audio processing dependencies
+scipy
+joblib
+scikit-learn 

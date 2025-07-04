@@ -108,7 +108,7 @@ sudo systemctl enable docker
 ./run-local.sh
 
 # Or manually
-conda activate indic-seamless
+source env/.venv/bin/activate
 python start_service.py
 ```
 
@@ -231,7 +231,7 @@ docker logs <container-name>
 ### **1. Direct Python Deployment**
 ```bash
 # Activate environment and run directly
-conda activate indic-seamless
+source env/.venv/bin/activate
 python start_service.py --port 5000
 ```
 
@@ -278,7 +278,7 @@ If nothing works, you can always run the service directly:
 
 ```bash
 # Quick fallback deployment
-conda activate indic-seamless
+source env/.venv/bin/activate
 python start_service.py
 
 # Or with custom port
@@ -296,7 +296,7 @@ If you're still having issues:
 
 1. **Check the main troubleshooting guide**: `TROUBLESHOOTING.md`
 2. **Run diagnostics**: `python env/benchmark.py`
-3. **Check environment**: `conda list`
+3. **Check environment**: `make check-deps`
 4. **Use debug mode**: `DEBUG=true ./run-local.sh`
 5. **Check logs**: `tail -f logs/service.log`
 
