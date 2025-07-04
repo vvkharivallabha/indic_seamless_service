@@ -50,6 +50,12 @@ ENV DEBUG=false
 ENV LOG_LEVEL=INFO
 ENV MODEL_LOAD_TIMEOUT=600
 
+# Add free tier optimization support
+ARG OPTIMIZE_FOR_SIZE=false
+ENV OPTIMIZE_FOR_SIZE=${OPTIMIZE_FOR_SIZE}
+ENV PYTHONOPTIMIZE=1
+ENV MALLOC_TRIM_THRESHOLD_=10000
+
 # Expose port (using 8000 to match app_structured default)
 EXPOSE 8000
 

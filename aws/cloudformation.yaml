@@ -1,50 +1,50 @@
-AWSTemplateFormatVersion: '2010-09-09'
-Description: 'Indic-Seamless Model Service on AWS ECS'
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Indic-Seamless Model Service on AWS ECS"
 
 Parameters:
   VpcId:
     Type: AWS::EC2::VPC::Id
     Description: VPC ID where the service will be deployed
-  
+
   SubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Description: Subnet IDs where the service will be deployed
-  
+
   ServiceName:
     Type: String
     Default: indic-seamless-service
     Description: Name of the ECS service
-  
+
   ContainerPort:
     Type: Number
-    Default: 5000
+    Default: 8000
     Description: Port on which the container listens
-  
+
   DesiredCount:
     Type: Number
     Default: 1
     Description: Desired number of tasks
-  
+
   Cpu:
     Type: String
-    Default: '2048'
-    AllowedValues: ['256', '512', '1024', '2048', '4096']
+    Default: "256"
+    AllowedValues: ["256", "512", "1024", "2048", "4096"]
     Description: CPU units for the task
-  
+
   Memory:
     Type: String
-    Default: '4096'
-    AllowedValues: ['512', '1024', '2048', '4096', '8192', '16384']
+    Default: "512"
+    AllowedValues: ["512", "1024", "2048", "4096", "8192", "16384"]
     Description: Memory (MiB) for the task
-  
+
   ImageUri:
     Type: String
     Description: ECR image URI for the service
-  
+
   Environment:
     Type: String
     Default: production
-    AllowedValues: ['development', 'staging', 'production']
+    AllowedValues: ["development", "staging", "production"]
     Description: Environment name
 
 Resources:
@@ -52,19 +52,13 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: !Sub '${ServiceName}-cluster'
-      CapacityProviders:
-        - FARGATE
-        - FARGATE_SPOT
-      DefaultCapacityProviderStrategy:
-        - CapacityProvider: FARGATE
-          Weight: 1
+      ClusterName: !Sub "${ServiceName}-cluster"
 
   # Task Definition
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: !Sub '${ServiceName}-task'
+      Family: !Sub "${ServiceName}-task"
       NetworkMode: awsvpc
       RequiresCompatibilities:
         - FARGATE
@@ -92,7 +86,7 @@ Resources:
           HealthCheck:
             Command:
               - CMD-SHELL
-              - curl -f http://localhost:5000/health || exit 1
+              - curl -f http://localhost:8000/health || exit 1
             Interval: 30
             Timeout: 5
             Retries: 3
@@ -123,7 +117,7 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: !Sub '${ServiceName}-alb'
+      Name: !Sub "${ServiceName}-alb"
       Scheme: internet-facing
       Type: application
       Subnets: !Ref SubnetIds
@@ -134,7 +128,7 @@ Resources:
   TargetGroup:
     Type: AWS::ElasticLoadBalancingV2::TargetGroup
     Properties:
-      Name: !Sub '${ServiceName}-tg'
+      Name: !Sub "${ServiceName}-tg"
       Port: !Ref ContainerPort
       Protocol: HTTP
       TargetType: ip
@@ -188,7 +182,7 @@ Resources:
   LogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: !Sub '/ecs/${ServiceName}'
+      LogGroupName: !Sub "/ecs/${ServiceName}"
       RetentionInDays: 30
 
   # ECS Execution Role
@@ -196,7 +190,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -207,7 +201,7 @@ Resources:
       Policies:
         - PolicyName: CloudWatchLogs
           PolicyDocument:
-            Version: '2012-10-17'
+            Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
@@ -220,7 +214,7 @@ Resources:
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
-        Version: '2012-10-17'
+        Version: "2012-10-17"
         Statement:
           - Effect: Allow
             Principal:
@@ -234,22 +228,22 @@ Outputs:
     Description: DNS name of the load balancer
     Value: !GetAtt LoadBalancer.DNSName
     Export:
-      Name: !Sub '${AWS::StackName}-LoadBalancerDNS'
-  
+      Name: !Sub "${AWS::StackName}-LoadBalancerDNS"
+
   ServiceURL:
     Description: URL of the service
-    Value: !Sub 'http://${LoadBalancer.DNSName}'
+    Value: !Sub "http://${LoadBalancer.DNSName}"
     Export:
-      Name: !Sub '${AWS::StackName}-ServiceURL'
-  
+      Name: !Sub "${AWS::StackName}-ServiceURL"
+
   ECSClusterName:
     Description: Name of the ECS cluster
     Value: !Ref ECSCluster
     Export:
-      Name: !Sub '${AWS::StackName}-ClusterName'
-  
+      Name: !Sub "${AWS::StackName}-ClusterName"
+
   TaskDefinitionArn:
     Description: ARN of the task definition
     Value: !Ref TaskDefinition
     Export:
-      Name: !Sub '${AWS::StackName}-TaskDefinitionArn' 
+      Name: !Sub "${AWS::StackName}-TaskDefinitionArn"
