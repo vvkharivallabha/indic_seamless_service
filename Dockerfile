@@ -1,10 +1,11 @@
-# Use NVIDIA PyTorch base image with CUDA support
-FROM nvcr.io/nvidia/pytorch:24.01-py3
+# Use Python 3.10 slim image for better performance and smaller size
+FROM python:3.10-slim
 
 # Set environment variables
 ENV DEBIAN_FRONTEND=noninteractive
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
+ENV PATH="/root/.local/bin:$PATH"
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -16,32 +17,46 @@ RUN apt-get update && apt-get install -y \
     libportaudio2 \
     portaudio19-dev \
     curl \
+    build-essential \
     && rm -rf /var/lib/apt/lists/*
+
+# Install uv for faster package management
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
-COPY env/requirements.txt .
+# Copy project files for dependency resolution
+COPY pyproject.toml README.md ./
+COPY env/requirements.txt ./env/
 
-# Install Python dependencies
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python dependencies with uv (much faster!)
+RUN uv pip install --system -r env/requirements.txt
 
 # Copy application code
-COPY . .
+COPY src/ ./src/
+COPY start_service.py ./
+COPY .env ./
 
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser && \
     chown -R appuser:appuser /app
 USER appuser
 
-# Expose port
-EXPOSE 5000
+# Set default environment variables
+ENV HOST=0.0.0.0
+ENV PORT=8000
+ENV DEBUG=false
+ENV LOG_LEVEL=INFO
+ENV MODEL_LOAD_TIMEOUT=600
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+# Expose port (using 8000 to match app_structured default)
+EXPOSE 8000
 
-# Run the application with uvicorn
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "5000", "--workers", "1"] 
+# Health check - be more lenient during startup for model loading
+HEALTHCHECK --interval=60s --timeout=60s --start-period=600s --retries=5 \
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
+
+# Run the structured application
+# Using start_service.py as it handles .env loading and better error handling
+CMD ["python", "start_service.py"] 

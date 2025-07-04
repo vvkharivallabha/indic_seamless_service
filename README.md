@@ -8,17 +8,25 @@ A production-ready REST API service for speech-to-text conversion using the [ai4
 
 > 💡 **Pro Tip**: Use `make help` to see all available commands!
 
+> ⚡ **Performance Boost**: This project uses [uv](https://github.com/astral-sh/uv) for lightning-fast package management and virtual environments!
+
 ### **🚀 Option 1: Using Makefile (Recommended)**
 
 ```bash
-# Setup environment and deploy with Docker
+# Setup environment with uv (much faster!)
 make setup
+
+# Setup environment variables for gated model access
+make setup-env
+# Edit the .env file and add your HuggingFace token
+nano .env
+
+# Deploy and run
 make deploy-local
 
 # Or for development mode
-make setup
-make run-local          # Original monolithic app
-make run-structured     # New structured app
+source env/.venv/bin/activate
+python start_service.py       # Production service launcher
 
 # Run tests
 make test
@@ -34,33 +42,118 @@ make help
    cd env
    ./setup.sh
    ```
-   This will install Miniconda (if needed), create a conda environment named `indic-seamless`, and install all dependencies.
+   This will install uv (if needed), create a virtual environment, and install all dependencies.
 
-   **To activate the environment later:**
+2. **Configure environment variables (Important for gated models!):**
    ```bash
-   conda activate indic-seamless
+   # Create .env file from template
+   cp env.example .env
+   
+   # Edit .env and add your HuggingFace token
+   nano .env
+   # Set: HF_TOKEN=your_huggingface_token
+   ```
+
+3. **To activate the environment later:**
+   ```bash
+   source env/.venv/bin/activate
    # or use the helper script
    source env/activate.sh
    ```
 
-2. **Start the service:**
+4. **Start the service:**
    ```bash
    python start_service.py      # Production launcher
-   # or
-   python app.py               # Original monolithic app
-   # or  
-   python app_structured.py    # New structured app
    # or with custom port
    python start_service.py --port 8001
    ```
    The service will start on `http://localhost:8000`
 
-3. **Test the service:**
+5. **Test the service:**
    ```bash
    python tests/workflow_test.py
    # or
    python examples/client_example.py
    ```
+
+### **🔑 Authentication Setup (Required for gated models)**
+
+The `ai4bharat/indic-seamless` model is gated and requires authentication:
+
+1. **Get HuggingFace Access:**
+   - Visit: https://huggingface.co/ai4bharat/indic-seamless
+   - Request access to the model
+   - Get your token from: https://huggingface.co/settings/tokens
+
+2. **Configure Authentication (Choose one method):**
+
+   **Method 1: Using .env file (Recommended)**
+   ```bash
+   make setup-env
+   nano .env
+   # Set: HF_TOKEN=your_token_here
+   ```
+
+   **Method 2: Using huggingface-cli**
+   ```bash
+   source env/.venv/bin/activate
+   huggingface-cli login
+   # Enter your token when prompted
+   ```
+
+3. **Verify Authentication:**
+   ```bash
+   python start_service.py --check-only
+   # Should show: ✅ Authenticated as: your_username
+   ```
+
+---
+
+## ⚡ uv Package Manager
+
+This project uses [uv](https://github.com/astral-sh/uv) for **both virtual environment management and package installation**:
+
+### Benefits:
+- **10-100x faster** than pip for package installation
+- **Blazing fast virtual environment creation** (seconds instead of minutes)
+- **Better dependency resolution** with fewer conflicts
+- **Automatic virtual environment management**
+- **Compatible with pip** - drop-in replacement
+- **Lockfile support** for reproducible builds
+- **No conda needed** - simplified toolchain
+
+### uv Commands:
+```bash
+# Create virtual environment
+uv venv .venv --python 3.10
+
+# Install dependencies (much faster than pip)
+uv pip install -r requirements.txt
+
+# Install from pyproject.toml
+uv pip install -e .
+
+# Install with specific extras
+uv pip install -e ".[dev]"
+
+# Install specific packages
+uv pip install torch transformers
+
+# Clean cache
+uv cache clean
+```
+
+### Environment Management:
+```bash
+# Activate virtual environment
+source env/.venv/bin/activate
+
+# Deactivate
+deactivate
+
+# Quick activation helper
+source env/activate.sh
+```
 
 ---
 
@@ -136,7 +229,7 @@ docker run -p 8000:5000 indic-seamless-stt
 ./scripts/run-local.sh
 
 # Or manually
-conda activate indic-seamless
+source env/.venv/bin/activate
 python start_service.py
 ```
 
@@ -169,16 +262,49 @@ python sagemaker/deploy.py
 
 ## 🔧 Troubleshooting
 
-1. **Service won't start**
+### Quick Fixes
+```bash
+# Fix common dependency issues
+make fix-deps
+
+# Setup .env file for authentication
+make setup-env
+
+# Check if everything is working
+make check-deps
+
+# Check authentication
+make check-auth
+
+# Complete reset if needed
+make clean setup
+```
+
+### Common Issues
+1. **Missing dependencies** (uvicorn, torch, python-multipart)
+   ```bash
+   make fix-deps
+   ```
+
+2. **Virtual environment not found**
+   ```bash
+   make setup
+   ```
+
+3. **Model loading fails** (authentication issue)
+   ```bash
+   make setup-env
+   # Edit .env and set HF_TOKEN=your_token
+   # Or use: make setup-auth
+   ```
+
+4. **Service won't start**
    ```bash
    python start_service.py --check-only
    lsof -i :8000
    ```
-2. **Model loading fails**
-   - Ensure sufficient memory (4GB+ recommended)
-   - Check internet connection for model download
-   - Verify disk space (~2GB for model)
-3. **Audio processing errors**
+
+5. **Audio processing errors**
    - Verify audio file format is supported
    - Check file is not corrupted
    - Ensure audio has speech content
@@ -186,8 +312,10 @@ python sagemaker/deploy.py
 **Debug mode:**
 ```bash
 export DEBUG=true
-python app.py
+python start_service.py
 ```
+
+📋 **Detailed troubleshooting**: See [`TROUBLESHOOTING.md`](docs/TROUBLESHOOTING.md) for complete solutions.
 
 ---
 
@@ -209,7 +337,7 @@ cd env && ./setup.sh
 #### Daily Development
 ```bash
 # Activate environment
-conda activate indic-seamless
+source env/.venv/bin/activate
 # or use helper script
 source env/activate.sh
 
@@ -223,13 +351,15 @@ python tests/workflow_test.py
 #### Environment Management
 ```bash
 # Check environment status
-conda info --envs
-conda list
+make check-deps
 
-# Update dependencies
-cd env
-pip-compile requirements.in
-pip install -r requirements.txt
+# Update dependencies with uv (super fast!)
+make compile-deps
+source env/.venv/bin/activate
+uv pip install -r env/requirements.txt
+
+# Or install from pyproject.toml
+uv pip install -e .
 
 # Benchmark performance
 python benchmark.py
@@ -312,12 +442,12 @@ python test_endpoint.py
 #### Environment Updates
 ```bash
 # Activate environment
-conda activate indic-seamless
+source env/.venv/bin/activate
 
-# Update dependencies
+# Update dependencies with uv (fast!)
 cd env
-pip-compile --upgrade requirements.in
-pip install -r requirements.txt
+uv pip compile requirements.in --output-file requirements.txt
+uv pip install -r requirements.txt
 
 # Test after updates
 python workflow_test.py
@@ -326,7 +456,7 @@ python workflow_test.py
 #### Performance Monitoring
 ```bash
 # Run performance benchmark
-conda activate indic-seamless
+source env/.venv/bin/activate
 python env/benchmark.py
 
 # Check service metrics
@@ -336,7 +466,7 @@ curl http://localhost:8000/health
 #### Troubleshooting
 ```bash
 # Check environment
-conda activate indic-seamless
+source env/.venv/bin/activate
 python -c "import torch; print(torch.__version__)"
 python -c "import transformers; print(transformers.__version__)"
 
@@ -365,7 +495,7 @@ jobs:
           cd env && ./setup.sh
       - name: Run Tests
         run: |
-          conda activate indic-seamless
+          source env/.venv/bin/activate
           python workflow_test.py
       - name: Build Docker
         run: docker build -t indic-seamless-service .
@@ -374,7 +504,7 @@ jobs:
 #### Pre-commit Hooks
 ```bash
 # Install pre-commit
-pip install pre-commit
+uv pip install pre-commit
 
 # Setup hooks
 pre-commit install
@@ -400,7 +530,6 @@ pre-commit run --all-files
 indic_seamless_service/
 ├── 📄 README.md              # This file - main documentation
 ├── 📄 PROJECT_STRUCTURE.md   # Detailed project organization
-├── 📄 app.py                 # Main FastAPI application
 ├── 📄 start_service.py       # Service startup script
 ├── 📄 Dockerfile             # Docker configuration
 ├── 📄 .gitignore             # Git ignore rules
@@ -412,7 +541,7 @@ indic_seamless_service/
 │   └── DOCKER_TROUBLESHOOTING.md # Docker help
 │
 ├── 📁 env/                   # Environment management
-│   ├── setup.sh              # Environment setup
+│   ├── setup.sh              # Environment setup with uv
 │   ├── activate.sh           # Quick activation
 │   ├── benchmark.py          # Performance testing
 │   ├── requirements.in       # Dependencies
@@ -451,6 +580,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [AI4Bharat](https://ai4bharat.org/) for the indic-seamless model
 - [Hugging Face](https://huggingface.co/) for model hosting
 - [FastAPI](https://fastapi.tiangolo.com/) for the web framework
+- [uv](https://github.com/astral-sh/uv) for blazing-fast package management
 
 ## 📋 Quick Reference
 
@@ -458,33 +588,28 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ```bash
 # Environment setup
 cd env && ./setup.sh
-conda activate indic-seamless
+source env/.venv/bin/activate
 
 # Start service
 python start_service.py
 python start_service.py --port 8001
 
 # Testing
-python workflow_test.py
-python client_example.py
+python tests/workflow_test.py
+python examples/client_example.py
 curl http://localhost:8000/health
 
 # Docker
-./deploy-local.sh
+./scripts/deploy-local.sh
 docker build -t indic-seamless-service .
-docker run -p 8000:5000 indic-seamless-service
+docker run -p 8000:8000 indic-seamless-service
 
 # Development (no Docker)
-./run-local.sh
+./scripts/run-local.sh
 
 # Performance
 python env/benchmark.py
-conda list
-conda info --envs
-
-# Deployment
-cd aws && ./deploy.sh
-cd terraform && terraform apply
+make check-deps
 ```
 
 ### Environment Variables

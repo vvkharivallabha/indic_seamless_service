@@ -1,1 +1,1 @@
-# Examples package for Indic Seamless Service 
+# Examples package for Indic Seamless Service

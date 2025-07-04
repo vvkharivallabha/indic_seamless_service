@@ -6,8 +6,8 @@ from .logging import setup_logging
 
 __all__ = [
     "preprocess_audio",
-    "allowed_file", 
+    "allowed_file",
     "load_model",
     "safe_decode_tokens",
-    "setup_logging"
-] 
+    "setup_logging",
+]

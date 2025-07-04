@@ -12,8 +12,6 @@ indic_seamless_service/
 ├── 📄 PROJECT_STRUCTURE.md         # This file - project organization guide
 ├── 📄 .gitignore                   # Git ignore rules
 ├── 📄 Dockerfile                   # Container configuration
-├── 📄 app.py                       # Original FastAPI application
-├── 📄 app_structured.py            # New structured FastAPI application
 ├── 📄 start_service.py             # Service startup script
 ├── 📄 env.example                  # Environment configuration template
 │
@@ -82,19 +80,15 @@ indic_seamless_service/
 
 ## 🏗️ **Application Architecture**
 
-The service offers two architectural approaches:
+The service uses a **structured modular architecture** with the following components:
 
-### **Traditional Monolithic (`app.py`)**
-- Single-file FastAPI application with all endpoints
-- Good for simple deployments and quick prototyping
-- All functionality in one place
-
-### **Structured Modular (`app_structured.py` + `src/`)**
+### **Structured Architecture (`src/`)**
 - **Configuration Layer** (`src/config/`) - Centralized settings and language configurations
 - **Type System** (`src/types/`) - Pydantic schemas and internal data models
 - **Utilities** (`src/utils/`) - Reusable audio processing, model loading, and logging utilities
 - **API Layer** (`src/api/`) - Clean separation of routes and application factory
 - **Environment Configuration** - Support for `.env` files and environment variables
+- **Service Launcher** (`start_service.py`) - Production-ready service startup with health checks
 
 ### **Core Features**
 1. **Model Loading** - Lazy loading of the AI model on first request
@@ -111,7 +105,6 @@ The service offers two architectural approaches:
 
 | File | Purpose | Description |
 |------|---------|-------------|
-| `app.py` | Main Service | FastAPI application with speech-to-text endpoints |
 | `start_service.py` | Service Launcher | Configurable service startup with health checks |
 | `Dockerfile` | Containerization | Docker image configuration for deployment |
 
@@ -128,7 +121,7 @@ The service offers two architectural approaches:
 
 | File | Purpose | Description |
 |------|---------|-------------|
-| `setup.sh` | Environment Setup | Automated conda environment creation |
+| `setup.sh` | Environment Setup | Automated uv virtual environment creation |
 | `activate.sh` | Quick Activation | Helper script for environment activation |
 | `benchmark.py` | Performance Testing | ML library and model loading benchmarks |
 | `requirements.in` | Dependency Specs | High-level dependency definitions |
@@ -213,12 +206,12 @@ graph TD
     C --> D[scripts/deploy-local.sh]
     C --> E[scripts/run-local.sh]
     
-    F[app.py] --> G[start_service.py]
+    F[src/api/] --> G[start_service.py]
     G --> D
     G --> E
     
-    H[tests/] --> F
-    I[examples/] --> F
+    H[tests/] --> G
+    I[examples/] --> G
     
     J[aws/] --> K[Dockerfile]
     L[terraform/] --> K

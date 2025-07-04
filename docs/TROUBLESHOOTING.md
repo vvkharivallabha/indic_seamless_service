@@ -1,195 +1,430 @@
 # Troubleshooting Guide
 
-This guide helps you resolve common issues with the Indic-Seamless Model Service.
+This guide helps you resolve common issues when setting up and running the Indic Seamless Service.
 
-## Common Issues and Solutions
+## 🔧 Quick Fixes
 
-### 1. Model Loading Issues
-
-**Problem**: Model fails to load or service crashes on startup.
-
-**Solutions**:
-- Ensure you have sufficient RAM (at least 8GB recommended)
-- Check if CUDA is available for GPU acceleration
-- Verify internet connection for model download
-- Try running the model loading test:
-
+### Most Common Issues
 ```bash
-python test_model_loading.py
+# If you have dependency issues, try:
+make fix-deps
+
+# Or for a complete clean setup:
+make clean setup
+
+# Check if everything is working:
+make check-deps
 ```
 
-### 2. Linter Errors
+---
 
-**Problem**: Type checker shows errors about missing stubs.
+## ⚡ uv Package Manager
 
-**Solutions**:
-- Install type stubs for better linter support:
+This project now uses [uv](https://github.com/astral-sh/uv) for faster package management.
 
+### Benefits of uv:
+- **10-100x faster** than pip for installations
+- **Better dependency resolution** with fewer conflicts
+- **Automatic fallback** to pip if uv is unavailable
+- **Compatible with pip** commands and workflows
+
+### uv Commands:
 ```bash
-python install_stubs.py
+# Check if uv is installed
+make check-deps
+
+# Install dependencies with uv (fast!)
+uv pip install -r env/requirements.txt
+
+# Compile dependencies
+make compile-deps
+
+# Install with extras
+uv pip install ".[dev]"
+uv pip install ".[aws,prod]"
+
+# Clean cache
+uv cache clean
 ```
 
-- These errors are typically not critical and don't affect functionality
-- ML libraries like PyTorch and Transformers often don't have complete type stubs
+### Common uv Issues:
 
-### 3. Token Decoding Errors
-
-**Problem**: `TypeError: int() argument must be a string, a bytes-like object or a real number, not 'list'` or `argument 'ids': 'list' object cannot be interpreted as an integer`
-
-**Solutions**:
-- This has been fixed in the latest version with the improved `safe_decode_tokens` function
-- The error occurs when the model returns unexpected token formats (list of lists vs single list)
-- The updated function now properly handles batch outputs and single sequences
-- Restart the service to use the updated code
-- Debug with: `python debug_tokens.py`
-
-### 4. Model Generation Errors
-
-**Problem**: `KeyError: 'inputs'` or `SeamlessM4TFeatureExtractor.__call__() missing 1 required positional argument: 'raw_speech'`
-
-**Solutions**:
-- Fixed by using the correct model classes and generation methods
-- **Text processing**: Use `tokenizer()` instead of `processor()`
-- **Audio processing**: Use `processor()` (feature extractor) for audio
-- **Generation**: Use `model.generate(**inputs, tgt_lang=target_lang)` for SeamlessM4Tv2
-- Test with: `python test_comprehensive.py`
-
-### 5. Vocoder Overflow Errors
-
-**Problem**: `RuntimeError: Storage size calculation overflowed with sizes=[9223372036854774023]`
-
-**Solutions**:
-- This error occurs when the model tries to use the vocoder for text generation
-- Fixed by using proper generation parameters: `do_sample=False`, `max_length=512`, `num_beams=1`
-- The error typically happens in text translation when the model incorrectly uses speech generation
-- Restart the service to use the updated generation parameters
-- Test with: `python test_translation.py`
-
-### 6. Language Code Issues
-
-**Problem**: "Unsupported language" errors.
-
-**Solutions**:
-- Use the correct language codes from the indic-seamless model
-- Check supported languages: `GET /supported-languages`
-- Common codes: `eng` (English), `hin` (Hindi), `ben` (Bengali), etc.
-
-### 7. Audio Processing Issues
-
-**Problem**: Audio files not processed correctly.
-
-**Solutions**:
-- Ensure audio files are in supported formats: wav, mp3, flac, m4a, ogg
-- Check file size (max 50MB)
-- Verify audio quality and sample rate
-
-### 8. Memory Issues
-
-**Problem**: Out of memory errors.
-
-**Solutions**:
-- Use CPU instead of GPU: Set `CUDA_VISIBLE_DEVICES=""`
-- Reduce batch size or input length
-- Increase system RAM or use swap space
-- Use model quantization for lower memory usage
-
-### 9. Network/Connection Issues
-
-**Problem**: Service not accessible or slow responses.
-
-**Solutions**:
-- Check if service is running: `curl http://localhost:8000/health`
-- Verify port configuration (default: 8000)
-- Check firewall settings
-- Monitor network connectivity
-
-## Testing and Debugging
-
-### 1. Health Check
+#### Problem: `uv` command not found
+**Solution:**
 ```bash
-curl http://localhost:8000/health
+# Install uv automatically via setup
+make setup
+
+# Or install manually
+curl -LsSf https://astral.sh/uv/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-### 2. Model Loading Test
+#### Problem: uv installation fails
+**Solution:**
 ```bash
-python test_model_loading.py
+# The system automatically falls back to pip
+# All commands work the same way, just slower
+pip install -r env/requirements.txt
 ```
 
-### 3. Language Code Test
+---
+
+## 📦 Dependency Issues
+
+### Problem: `ModuleNotFoundError: No module named 'uvicorn'`
+**Solution:**
 ```bash
-python test_languages.py
+# With uv (fast)
+uv pip install 'uvicorn[standard]==0.35.0'
+
+# Or with pip (fallback)
+pip install 'uvicorn[standard]==0.35.0'
 ```
 
-### 4. Client Example
+### Problem: `ModuleNotFoundError: No module named 'torch'`
+**Solution:**
 ```bash
-python client_example.py
+# With uv (fast)
+uv pip install torch==2.7.1 torchaudio==2.7.1
+
+# Or with pip (fallback)
+pip install torch==2.7.1 torchaudio==2.7.1
 ```
 
-## Performance Optimization
+### Problem: `Form data requires "python-multipart" to be installed`
+**Solution:**
+```bash
+# With uv (fast)
+uv pip install python-multipart==0.0.20
 
-### 1. GPU Acceleration
-- Ensure CUDA is installed and available
-- Monitor GPU memory usage
-- Use mixed precision for faster inference
+# Or with pip (fallback)
+pip install python-multipart==0.0.20
+```
 
-### 2. Model Optimization
-- Use model quantization (INT8/FP16)
-- Enable model caching
-- Implement request batching
+### Problem: `antlr4-python3-runtime` version conflicts
+**Symptoms:**
+- `pip install -r requirements.txt` fails
+- `TypeError: canonicalize_version() got an unexpected keyword argument 'strip_trailing_zero'`
 
-### 3. System Resources
-- Monitor CPU and memory usage
-- Use SSD storage for faster I/O
-- Optimize network configuration
+**Solution:**
+```bash
+# Use the fixed requirements.txt or install essential packages manually
+make fix-deps
 
-## Logs and Monitoring
+# Or regenerate requirements with uv
+make compile-deps
+```
 
-### 1. Service Logs
-- Check application logs for errors
-- Monitor model loading status
-- Track request/response times
+---
 
-### 2. System Monitoring
-- Monitor system resources (CPU, RAM, GPU)
-- Check disk space and I/O
-- Monitor network usage
+## 🔐 Authentication Issues
 
-### 3. Error Tracking
-- Common error patterns:
-  - Model loading failures
-  - Token decoding issues
-  - Audio processing errors
-  - Language validation failures
+### Problem: Gated Repository Error
+**Symptoms:**
+```
+You are trying to access a gated repo.
+Access to model ai4bharat/indic-seamless is restricted.
+```
 
-## Getting Help
+**Solution:**
+1. Visit: https://huggingface.co/ai4bharat/indic-seamless
+2. Click "Request Access" and wait for approval
+3. Get your access token from: https://huggingface.co/settings/tokens
+4. Login with the token:
+   ```bash
+   huggingface-cli login
+   # Enter your token when prompted
+   ```
 
-If you encounter issues not covered in this guide:
+### Check Authentication Status
+```bash
+# Check if you're authenticated
+make check-auth
 
-1. Check the service logs for detailed error messages
-2. Run the test scripts to isolate the problem
-3. Verify your environment and dependencies
-4. Check the GitHub issues for similar problems
-5. Create a detailed bug report with:
-   - Error messages and logs
-   - Environment details
-   - Steps to reproduce
-   - Expected vs actual behavior
+# Or manually:
+python -c "from huggingface_hub import HfApi; print(HfApi().whoami())"
+```
 
-## Environment Requirements
+---
 
-### Minimum Requirements
-- Python 3.8+
-- 8GB RAM
-- 10GB disk space
-- Internet connection for model download
+## 🚀 Service Issues
 
-### Recommended Requirements
-- Python 3.10+
-- 16GB+ RAM
-- GPU with CUDA support
-- SSD storage
-- High-speed internet
+### Problem: Service won't start
+**Diagnosis:**
+```bash
+# Check if port is in use
+lsof -i :8000
 
-### Dependencies
-- See `env/requirements.txt` for complete list
-- Key dependencies: torch, transformers, fastapi, librosa 
+# Check dependencies
+make check-deps
+
+# Check conda environment
+conda info --envs
+```
+
+**Solutions:**
+```bash
+# Try different port
+python start_service.py --port 8001
+
+# Or kill existing process
+kill -9 $(lsof -t -i:8000)
+
+# Or restart from clean state
+make clean setup
+```
+
+### Problem: Model loading fails
+**Symptoms:**
+- Service starts but model endpoints don't work
+- "Failed to load model" errors in logs
+
+**Solutions:**
+1. **Check authentication** (most common):
+   ```bash
+   make setup-auth
+   ```
+
+2. **Check memory** (need 4GB+ RAM):
+   ```bash
+   # Check available memory
+   free -h  # Linux
+   # or
+   vm_stat | grep free  # macOS
+   ```
+
+3. **Check disk space** (need 2GB+ for model):
+   ```bash
+   df -h
+   ```
+
+---
+
+## 🐳 Docker Issues
+
+### Problem: Docker build fails
+**Solutions:**
+```bash
+# Clean up Docker
+docker system prune -f
+
+# Build with more memory
+docker build --memory=4g -t indic-seamless-service .
+
+# Or use local development instead
+make run-local
+```
+
+### Problem: Container crashes
+**Diagnosis:**
+```bash
+# Check logs
+docker logs indic-seamless-local
+
+# Check container status
+docker ps -a
+```
+
+---
+
+## 🌐 Network Issues
+
+### Problem: Can't download models
+**Symptoms:**
+- Timeouts when loading models
+- Connection errors during setup
+
+**Solutions:**
+```bash
+# Check internet connection
+ping huggingface.co
+
+# Use proxy if needed
+export https_proxy=your-proxy-url
+export http_proxy=your-proxy-url
+
+# Or download models manually
+python -c "from transformers import AutoModel; AutoModel.from_pretrained('ai4bharat/indic-seamless')"
+```
+
+---
+
+## 💻 Environment Issues
+
+### Problem: Conda environment not found
+**Solutions:**
+```bash
+# Check if conda is installed
+which conda
+
+# Install conda if missing
+cd env && ./setup.sh
+
+# Create environment manually
+conda create -n indic-seamless python=3.10
+conda activate indic-seamless
+```
+
+### Problem: Wrong Python version
+**Solutions:**
+```bash
+# Check Python version
+python --version
+
+# Should be 3.10.x, if not:
+conda install python=3.10
+```
+
+---
+
+## 🧪 Testing Issues
+
+### Problem: Tests fail
+**Diagnosis:**
+```bash
+# Run tests with verbose output
+python -m pytest tests/ -v
+
+# Or run specific test
+python tests/workflow_test.py
+```
+
+**Common Solutions:**
+```bash
+# Make sure service is running
+make run-structured
+
+# Or test against different URL
+python tests/workflow_test.py --url http://localhost:8001
+```
+
+---
+
+## 🔍 Debugging Steps
+
+### 1. Environment Check
+```bash
+# Check all dependencies
+make check-deps
+
+# Check authentication
+make check-auth
+
+# Check service status
+make status
+```
+
+### 2. Clean Installation
+```bash
+# Nuclear option - start fresh
+make clean
+conda remove -n indic-seamless --all
+make setup
+```
+
+### 3. Manual Installation
+```bash
+# Install only essentials with uv (fast)
+make install-essentials
+
+# Then add others as needed
+uv pip install librosa soundfile
+```
+
+### 4. Debug Mode
+```bash
+# Run with debug logging
+export DEBUG=true
+python start_service.py
+```
+
+---
+
+## 📋 Environment Variables
+
+Useful environment variables for debugging:
+
+```bash
+# Enable debug logging
+export DEBUG=true
+
+# Use different port
+export PORT=8001
+
+# Custom model cache directory
+export MODEL_CACHE_DIR=./models
+
+# Proxy settings
+export https_proxy=your-proxy-url
+export http_proxy=your-proxy-url
+```
+
+---
+
+## 🆘 Getting Help
+
+### 1. Check Logs
+```bash
+# Service logs
+tail -f logs/service.log
+
+# Docker logs
+docker logs indic-seamless-local
+
+# System logs
+journalctl -u your-service
+```
+
+### 2. System Information
+```bash
+# Gather system info for bug reports
+echo "OS: $(uname -a)"
+echo "Python: $(python --version)"
+echo "Conda: $(conda --version)"
+echo "uv: $(uv --version)"
+echo "Docker: $(docker --version)"
+echo "Memory: $(free -h)"
+echo "Disk: $(df -h)"
+```
+
+### 3. Common Commands
+```bash
+# All-in-one health check
+make check-deps && make check-auth && make status
+
+# Quick fix for most issues
+make quick-fix
+
+# Complete reset
+make clean setup
+```
+
+---
+
+## 📚 Additional Resources
+
+- [Dependencies Guide](DEPENDENCIES.md)
+- [Docker Troubleshooting](DOCKER_TROUBLESHOOTING.md)
+- [Workflows Guide](WORKFLOWS.md)
+- [Project Structure](../PROJECT_STRUCTURE.md)
+- [uv Documentation](https://github.com/astral-sh/uv)
+
+---
+
+## 🐛 Reporting Issues
+
+When reporting issues, please include:
+
+1. **Error message** (full traceback)
+2. **System information** (OS, Python version, etc.)
+3. **Package manager used** (uv or pip)
+4. **Steps to reproduce** the issue
+5. **Output of diagnostic commands**:
+   ```bash
+   make check-deps
+   make check-auth
+   make status
+   ```
+
+This helps us help you faster! 🚀 

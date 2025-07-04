@@ -5,8 +5,8 @@ from .models import ModelState
 
 __all__ = [
     "STTResponse",
-    "HealthResponse", 
+    "HealthResponse",
     "LanguagesResponse",
     "STTRequest",
-    "ModelState"
-] 
+    "ModelState",
+]

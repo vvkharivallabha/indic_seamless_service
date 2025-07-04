@@ -1,12 +1,12 @@
 #!/bin/bash
 
 # Direct local deployment script (no Docker required)
-# This script runs the service directly using Python/conda
+# This script runs the service directly using Python with uv virtual environment
 
 set -e
 
 # Configuration
-PORT="${PORT:-5000}"
+PORT="${PORT:-8000}"
 DEBUG="${DEBUG:-false}"
 
 # Colors for output
@@ -27,25 +27,24 @@ print_error() {
     echo -e "${RED}[ERROR]${NC} $1"
 }
 
-# Function to check if conda environment exists
+# Function to check if virtual environment exists
 check_environment() {
-    if command -v conda &> /dev/null; then
-        if conda env list 2>/dev/null | grep -q "indic-seamless"; then
-            return 0
-        fi
+    if [ -f "env/.venv/bin/activate" ]; then
+        return 0
     fi
     return 1
 }
 
 # Function to activate environment
 activate_environment() {
-    if command -v conda &> /dev/null; then
-        print_status "Activating conda environment..."
-        eval "$(conda shell.bash hook)"
-        conda activate indic-seamless
+    if [ -f "env/.venv/bin/activate" ]; then
+        print_status "Activating virtual environment..."
+        source env/.venv/bin/activate
+        print_status "✅ Virtual environment activated"
+        print_status "🐍 Python: $(python --version)"
         return 0
     else
-        print_error "Conda not found. Please install conda or run setup.sh"
+        print_error "Virtual environment not found at env/.venv"
         return 1
     fi
 }
@@ -69,9 +68,14 @@ check_dependencies() {
         missing_deps+=("fastapi")
     fi
     
+    if ! python -c "import uvicorn" 2>/dev/null; then
+        missing_deps+=("uvicorn")
+    fi
+    
     if [ ${#missing_deps[@]} -gt 0 ]; then
         print_error "Missing dependencies: ${missing_deps[*]}"
-        print_status "Please run: cd env && pip install -r requirements.txt"
+        print_status "Please run: make fix-deps"
+        print_status "Or manually: cd env && source .venv/bin/activate && uv pip install -r requirements.txt"
         return 1
     fi
     
@@ -157,8 +161,10 @@ echo "================================================"
 
 # Check if environment setup is needed
 if ! check_environment; then
-    print_error "Conda environment 'indic-seamless' not found"
+    print_error "Virtual environment not found at env/.venv"
     print_status "Please run setup first:"
+    print_status "  make setup"
+    print_status "  # or"
     print_status "  cd env && ./setup.sh"
     exit 1
 fi

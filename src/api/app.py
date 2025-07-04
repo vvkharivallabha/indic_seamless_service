@@ -13,22 +13,22 @@ from .routes import router
 def create_app() -> FastAPI:
     """
     Create and configure FastAPI application.
-    
+
     Returns:
         Configured FastAPI application instance
     """
     # Setup logging
     setup_logging()
-    
+
     # Create FastAPI app
     app = FastAPI(
         title=settings.title,
         description=settings.description,
         version=settings.version,
         docs_url=settings.docs_url,
-        redoc_url=settings.redoc_url
+        redoc_url=settings.redoc_url,
     )
-    
+
     # Add CORS middleware
     app.add_middleware(
         CORSMiddleware,
@@ -37,8 +37,8 @@ def create_app() -> FastAPI:
         allow_methods=settings.cors_allow_methods,
         allow_headers=settings.cors_allow_headers,
     )
-    
+
     # Include routes
     app.include_router(router)
-    
-    return app 
+
+    return app

@@ -4,23 +4,13 @@
 
 The Indic-Seamless Service now offers a structured, modular architecture that promotes maintainability, scalability, and code organization. This guide explains the new structure and how to use it.
 
-## Architecture Comparison
+## Architecture Overview
 
-### Traditional Monolithic (`app.py`)
-```
-app.py (577 lines)
-├── All imports
-├── Pydantic models
-├── Language configurations
-├── Utility functions
-├── Model loading
-├── API endpoints
-└── Startup logic
-```
+The Indic-Seamless Service uses a **structured modular architecture** with the following components:
 
-### Structured Modular (`app_structured.py` + `src/`)
+### **Current Architecture (`start_service.py` + `src/`)**
 ```
-app_structured.py (27 lines) - Entry point
+start_service.py - Production service launcher with health checks
 src/
 ├── config/          - Configuration management
 ├── types/           - Type definitions and schemas
@@ -63,7 +53,7 @@ src/
 - Centralized logging setup
 
 ### 📁 `src/api/` - API Layer
-- **`app.py`** - FastAPI application factory
+- **`app.py`** - FastAPI application factory (src/api/app.py)
 - **`routes.py`** - API endpoint definitions
 - **`__init__.py`** - Module exports
 
@@ -74,17 +64,20 @@ src/
 
 ## Usage
 
-### Running the Structured Application
+### Running the Application
 
 ```bash
 # Using Makefile
-make run-structured
+make deploy-local
 
 # Direct execution
-python app_structured.py
+python start_service.py
 
 # With environment variables
-LOG_LEVEL=DEBUG python app_structured.py
+LOG_LEVEL=DEBUG python start_service.py
+
+# With custom port
+python start_service.py --port 8001
 ```
 
 ### Environment Configuration
@@ -142,13 +135,16 @@ from src.api import create_app
 - **Type Safety** - Comprehensive type definitions
 - **Documentation** - Self-documenting code structure
 
-## Migration Guide
+## Development Guide
 
-### From Monolithic to Structured
+### Working with the Structured Architecture
 
-1. **Keep the Original** - `app.py` remains functional
-2. **Try the Structured** - Use `app_structured.py` for new development
-3. **Gradual Migration** - Move functionality piece by piece if needed
+The service uses a clean, modular structure that makes development and maintenance straightforward:
+
+1. **Configuration** - All settings are managed in `src/config/`
+2. **Type Safety** - Request/response models are defined in `src/types/`
+3. **Utilities** - Reusable functions are organized in `src/utils/`
+4. **API Layer** - Routes and application factory are in `src/api/`
 
 ### Configuration Migration
 

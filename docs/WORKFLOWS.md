@@ -1,233 +1,350 @@
-# 🔄 Indic-Seamless Service Workflows
+# Development Workflows
 
-Quick reference guide for common development, testing, and deployment workflows.
+This document outlines recommended workflows for developing and maintaining the Indic-Seamless service.
 
----
+## Daily Development Workflow
 
-## 🏗️ **SETUP** (One-time)
-
+### 1. Environment Setup (One-time)
 ```bash
-# Initial setup
-git clone <repository-url>
-cd indic_seamless_service
-cd env && ./setup.sh
+# Initial setup with uv
+cd env
+./setup.sh
 
-# Verify setup
-conda activate indic-seamless
-python -c "import torch, transformers; print('✅ Setup successful')"
+# Verify installation
+source .venv/bin/activate
+python --version
 ```
 
----
-
-## 💻 **DEVELOPMENT** (Daily)
-
+### 2. Daily Development Start
 ```bash
-# Start development session
-conda activate indic-seamless
-# or: source env/activate.sh
+# Activate environment
+source env/.venv/bin/activate
 
-# Start service
+# Or use the helper script
+source env/activate.sh
+
+# Start development server
 python start_service.py
-
-# Test in another terminal
-python workflow_test.py
 ```
 
-**Environment Management:**
+### 3. Development Cycle
+
+#### Code Changes
 ```bash
-conda info --envs              # List environments
-conda list                     # List packages
-cd env && pip-compile requirements.in  # Update deps
-python env/benchmark.py        # Performance check
+# Make your changes
+nano start_service.py
+
+# Test changes
+python tests/workflow_test.py
+
+# Or run specific tests
+python tests/test_service.py
 ```
 
----
-
-## 🧪 **TESTING**
-
-### Local Testing
+#### Environment Management
 ```bash
-# Quick tests
-python workflow_test.py
-python client_example.py
+# Check environment status
+make check-deps
+
+# Install new dependencies
+uv pip install some-package
+
+# Update requirements
+cd env
+uv pip compile requirements.in --output-file requirements.txt
+```
+
+### 4. Testing Workflow
+
+#### Unit Tests
+```bash
+# Run all tests
+make test
+
+# Run specific test file
+python -m pytest tests/test_service.py -v
+
+# Run with coverage
+python -m pytest tests/ --cov=src --cov-report=html
+```
+
+#### Integration Tests
+```bash
+# Test the complete workflow
+python tests/workflow_test.py
+
+# Test with specific audio file
+python tests/workflow_test.py --audio sample.wav
+
+# Test different service endpoint
+python tests/workflow_test.py --url http://localhost:8001
+```
+
+## Production Deployment Workflow
+
+### 1. Local Testing
+```bash
+# Test Docker build
+make docker-build
+
+# Test deployment
+make deploy-local
+
+# Verify service
 curl http://localhost:8000/health
-
-# Comprehensive testing
-python test_service.py
 ```
 
-### Docker Testing
+### 2. Environment Preparation
 ```bash
-# Automated Docker deployment
-./deploy-local.sh
+# Clean environment
+make clean
 
-# Manual Docker test
-docker build -t indic-seamless-service .
-docker run -p 8000:5000 indic-seamless-service
-curl http://localhost:5000/health
+# Fresh setup
+make setup
+
+# Verify all dependencies
+make check-deps
 ```
 
-### Development Testing (No Docker)
+### 3. Docker Deployment
 ```bash
-# For development environments where Docker isn't available
-./run-local.sh
+# Build production image
+docker build -t indic-seamless-service:latest .
 
-# Quick development test
-conda activate indic-seamless
-python start_service.py
-curl http://localhost:8000/health
+# Run container
+docker run -d \
+  --name indic-seamless-prod \
+  -p 8000:5000 \
+  -e DEBUG=false \
+  indic-seamless-service:latest
+
+# Monitor logs
+docker logs -f indic-seamless-prod
 ```
 
----
-
-## 🚀 **DEPLOYMENT**
-
-### AWS ECS
+### 4. AWS Deployment
 ```bash
+# Deploy to ECS
 cd aws
 ./deploy.sh
 
-# Monitor
-aws ecs describe-services --cluster indic-seamless-cluster --services indic-seamless-service
-aws logs tail /ecs/indic-seamless-service --follow
+# Monitor deployment
+aws ecs describe-services \
+  --cluster indic-seamless-cluster \
+  --services indic-seamless-service
 ```
 
-### Terraform
+## Maintenance Workflow
+
+### 1. Dependency Updates
 ```bash
-cd terraform
-terraform init
-terraform plan -out=tfplan
-terraform apply tfplan
-terraform output service_url
-```
+# Activate environment
+source env/.venv/bin/activate
 
-### SageMaker
-```bash
-cd sagemaker
-python deploy.py
-python test_endpoint.py
-```
-
----
-
-## 🔧 **MAINTENANCE**
-
-### Update Dependencies
-```bash
-conda activate indic-seamless
+# Update dependencies with uv
 cd env
-pip-compile --upgrade requirements.in
-pip install -r requirements.txt
-python ../workflow_test.py  # Test after update
+uv pip compile requirements.in --upgrade --output-file requirements.txt
+uv pip install -r requirements.txt
+
+# Test after updates
+make test
 ```
 
-### Performance Monitoring
+### 2. Security Updates
 ```bash
+# Check for vulnerabilities
+uv pip audit
+
+# Update specific packages
+uv pip install --upgrade package-name
+
+# Verify fixes
+python tests/workflow_test.py
+```
+
+### 3. Performance Monitoring
+```bash
+# Run performance benchmark
+source env/.venv/bin/activate
 python env/benchmark.py
+
+# Check resource usage
+docker stats indic-seamless-prod
+
+# Monitor service health
 curl http://localhost:8000/health
 ```
 
-### Troubleshooting
+## Troubleshooting Workflow
+
+### 1. Environment Issues
 ```bash
 # Check environment
-conda activate indic-seamless
-python -c "import torch; print(f'PyTorch: {torch.__version__}')"
-python -c "import transformers; print(f'Transformers: {transformers.__version__}')"
+source env/.venv/bin/activate
+python --version
+which python
+
+# Check dependencies
+make check-deps
+
+# Reset environment if needed
+make clean setup
+```
+
+### 2. Service Issues
+```bash
+# Check if service is running
+lsof -i :8000
+
+# Check logs
+tail -f logs/service.log
 
 # Debug mode
 export DEBUG=true
 python start_service.py
-
-# Check logs
-tail -f logs/service.log
-docker logs indic-seamless-local
 ```
 
----
-
-## 🚨 **EMERGENCY FIXES**
-
-### Service Won't Start
+### 3. Model Issues
 ```bash
-# Check port conflicts
-lsof -i :8000
-python start_service.py --check-only
+# Check authentication
+make check-auth
 
-# Reset environment
-conda deactivate
-conda activate indic-seamless
-python start_service.py
+# Setup authentication
+make setup-auth
+huggingface-cli login
+
+# Test model loading
+python -c "from transformers import AutoProcessor; AutoProcessor.from_pretrained('ai4bharat/indic-seamless')"
 ```
 
-### Docker Issues
-```bash
-# If Docker daemon is not running
-sudo systemctl start docker  # or sudo service docker start
+## Emergency Procedures
 
-# Clean Docker
-docker stop indic-seamless-local
-docker rm indic-seamless-local
+### 1. Service Down
+```bash
+# Check if process is running
+ps aux | grep python
+
+# Kill hanging processes
+pkill -f "python start_service.py"
+
+# Restart service
+source env/.venv/bin/activate
+python start_service.py &
+```
+
+### 2. High Resource Usage
+```bash
+# Check system resources
+top
+df -h
+
+# Clean up
+make clean
 docker system prune -f
 
-# Rebuild with Docker
-./deploy-local.sh
+# Restart with resource limits
+docker run -d \
+  --name indic-seamless-prod \
+  --memory=4g \
+  --cpus=2 \
+  -p 8000:5000 \
+  indic-seamless-service:latest
 ```
 
-### Development Issues (No Docker)
+### 3. Dependency Conflicts
 ```bash
-# For development environments
-./run-local.sh
+# Clean environment
+make clean
 
-# Or manual setup
-conda activate indic-seamless
-python start_service.py
+# Fresh setup
+make setup
+
+# Install minimal dependencies
+make install-essentials
+
+# Test basic functionality
+python tests/workflow_test.py
 ```
 
-### Model Loading Errors
+## Quality Assurance Workflow
+
+### 1. Code Quality
 ```bash
-# Clear model cache
-rm -rf ~/.cache/huggingface/
-python -c "from transformers import AutoModel; AutoModel.from_pretrained('ai4bharat/indic-seamless')"
+# Run linter
+make lint
+
+# Format code
+make format
+
+# Type checking
+mypy src/ --ignore-missing-imports
 ```
 
----
+### 2. Testing
+```bash
+# Run all tests
+make test
 
-## 📋 **QUICK COMMANDS**
+# Run with coverage
+python -m pytest tests/ --cov=src --cov-report=term-missing
 
+# Performance tests
+python env/benchmark.py
+```
+
+### 3. Documentation
+```bash
+# Update documentation
+nano docs/README.md
+
+# Generate API docs
+python -c "import app; print(app.app.openapi())" > docs/openapi.json
+
+# Test documentation links
+markdown-link-check docs/*.md
+```
+
+## Quick Reference
+
+### Essential Commands
 | Task | Command |
 |------|---------|
-| **Setup** | `cd env && ./setup.sh` |
-| **Activate** | `conda activate indic-seamless` |
-| **Start** | `python start_service.py` |
-| **Test** | `python workflow_test.py` |
-| **Docker** | `./deploy-local.sh` |
-| **Dev (No Docker)** | `./run-local.sh` |
-| **Deploy AWS** | `cd aws && ./deploy.sh` |
-| **Deploy Terraform** | `cd terraform && terraform apply` |
-| **Benchmark** | `python env/benchmark.py` |
-| **Debug** | `DEBUG=true python start_service.py` |
-| **Health** | `curl http://localhost:8000/health` |
+| **Setup** | `make setup` |
+| **Activate** | `source env/.venv/bin/activate` |
+| **Start Service** | `python start_service.py` |
+| **Run Tests** | `make test` |
+| **Build Docker** | `make docker-build` |
+| **Deploy Local** | `make deploy-local` |
+| **Check Health** | `curl http://localhost:8000/health` |
+| **View Logs** | `docker logs -f indic-seamless-local` |
+| **Clean Up** | `make clean` |
 
----
+### Environment Variables
+```bash
+# Development
+export DEBUG=true
+export PORT=8001
 
-## 🌐 **USEFUL URLS**
+# Production
+export DEBUG=false
+export PORT=8000
+export MODEL_CACHE_DIR=/opt/models
+```
 
-- **Service**: http://localhost:8000
-- **API Docs**: http://localhost:8000/docs  
-- **Health**: http://localhost:8000/health
-- **Languages**: http://localhost:8000/supported-languages
+### Common Issues
+- **Import errors**: Run `make fix-deps`
+- **Service won't start**: Check `lsof -i :8000`
+- **Model loading fails**: Run `make setup-auth`
+- **Performance issues**: Run `python env/benchmark.py`
 
----
+## Pre-deployment Checklist
 
-## 📞 **SUPPORT CHECKLIST**
-
-Before asking for help:
-- [ ] Checked `TROUBLESHOOTING.md`
-- [ ] Ran `python env/benchmark.py`
-- [ ] Tested with `python workflow_test.py`
-- [ ] Checked logs with `DEBUG=true`
-- [ ] Verified environment with `conda list`
-
----
-
-*Last updated: $(date)* 
+- [ ] Environment setup completed with `make setup`
+- [ ] All tests passing with `make test`
+- [ ] Dependencies checked with `make check-deps`
+- [ ] Authentication configured with `make setup-auth`
+- [ ] Docker build successful
+- [ ] Service responds to health checks
+- [ ] Performance benchmarks acceptable
+- [ ] Documentation updated
+- [ ] Security scan completed 
