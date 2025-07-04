@@ -17,7 +17,8 @@ make deploy-local
 
 # Or for development mode
 make setup
-make run-local
+make run-local          # Original monolithic app
+make run-structured     # New structured app
 
 # Run tests
 make test
@@ -44,9 +45,11 @@ make help
 
 2. **Start the service:**
    ```bash
-   python start_service.py
+   python start_service.py      # Production launcher
    # or
-   python app.py
+   python app.py               # Original monolithic app
+   # or  
+   python app_structured.py    # New structured app
    # or with custom port
    python start_service.py --port 8001
    ```

@@ -9,6 +9,7 @@ Welcome to the **Indic-Seamless Service** documentation hub. This directory cont
 | Document | Purpose | Audience |
 |----------|---------|----------|
 | **[WORKFLOWS.md](WORKFLOWS.md)** | Step-by-step development & deployment workflows | Developers, DevOps |
+| **[STRUCTURED_ARCHITECTURE.md](STRUCTURED_ARCHITECTURE.md)** | Modular architecture guide and best practices | Developers, Architects |
 | **[DEPENDENCIES.md](DEPENDENCIES.md)** | Package management and environment setup | Developers, System Admins |
 | **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** | General issues and solutions | All Users |
 | **[DOCKER_TROUBLESHOOTING.md](DOCKER_TROUBLESHOOTING.md)** | Docker-specific problems and fixes | DevOps, Developers |
@@ -44,6 +45,12 @@ Welcome to the **Indic-Seamless Service** documentation hub. This directory cont
 - **Contents**: Setup, development, testing, deployment procedures
 - **Format**: Step-by-step commands with explanations
 - **Use Case**: Daily development and deployment operations
+
+### **[STRUCTURED_ARCHITECTURE.md](STRUCTURED_ARCHITECTURE.md)**
+- **Purpose**: Modular architecture guide and migration
+- **Contents**: Architecture comparison, module structure, best practices
+- **Format**: Detailed explanations with code examples
+- **Use Case**: Understanding and adopting the structured codebase
 
 ### **[DEPENDENCIES.md](DEPENDENCIES.md)**
 - **Purpose**: Environment and package management
@@ -93,8 +100,8 @@ Welcome to the **Indic-Seamless Service** documentation hub. This directory cont
 
 ## 📊 **Documentation Metrics**
 
-- **Total Guides**: 4
-- **Total Pages**: ~500 lines
+- **Total Guides**: 5
+- **Total Pages**: ~750 lines
 - **Coverage**: Setup, Development, Deployment, Troubleshooting
 - **Maintenance**: Updated with each release
 

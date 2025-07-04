@@ -12,10 +12,35 @@ indic_seamless_service/
 ├── 📄 PROJECT_STRUCTURE.md         # This file - project organization guide
 ├── 📄 .gitignore                   # Git ignore rules
 ├── 📄 Dockerfile                   # Container configuration
-├── 📄 app.py                       # Main FastAPI application
+├── 📄 app.py                       # Original FastAPI application
+├── 📄 app_structured.py            # New structured FastAPI application
 ├── 📄 start_service.py             # Service startup script
+├── 📄 env.example                  # Environment configuration template
+│
+├── 📁 src/                         # 🏗️ Structured Source Code
+│   ├── 📁 config/                  # ⚙️ Configuration Management
+│   │   ├── __init__.py             # Config module exports
+│   │   ├── settings.py             # Application settings
+│   │   └── languages.py           # Language configurations
+│   │
+│   ├── 📁 types/                   # 📋 Type Definitions
+│   │   ├── __init__.py             # Types module exports
+│   │   ├── schemas.py              # Pydantic request/response models
+│   │   └── models.py               # Internal data structures
+│   │
+│   ├── 📁 utils/                   # 🔧 Utility Functions
+│   │   ├── __init__.py             # Utils module exports
+│   │   ├── audio.py                # Audio processing utilities
+│   │   ├── model.py                # Model loading and processing
+│   │   └── logging.py              # Logging configuration
+│   │
+│   └── 📁 api/                     # 🌐 API Layer
+│       ├── __init__.py             # API module exports
+│       ├── app.py                  # FastAPI application factory
+│       └── routes.py               # API route definitions
 │
 ├── 📁 docs/                        # 📚 Documentation
+│   ├── README.md                   # Documentation index
 │   ├── DEPENDENCIES.md             # Dependency management guide
 │   ├── TROUBLESHOOTING.md          # General troubleshooting
 │   ├── WORKFLOWS.md                # Development workflows
@@ -37,7 +62,8 @@ indic_seamless_service/
 │   └── workflow_test.py            # Integration tests
 │
 ├── 📁 examples/                    # 💡 Usage Examples
-│   └── client_example.py           # Client implementation example
+│   ├── client_example.py           # Client implementation example
+│   └── test_enum_display.py        # Language enum demonstration
 │
 ├── 📁 aws/                         # ☁️ AWS Deployment
 │   ├── deploy.sh                   # AWS ECS deployment script
@@ -51,6 +77,31 @@ indic_seamless_service/
     ├── inference.py                # SageMaker inference handler
     └── client_example.py           # SageMaker client example
 ```
+
+---
+
+## 🏗️ **Application Architecture**
+
+The service offers two architectural approaches:
+
+### **Traditional Monolithic (`app.py`)**
+- Single-file FastAPI application with all endpoints
+- Good for simple deployments and quick prototyping
+- All functionality in one place
+
+### **Structured Modular (`app_structured.py` + `src/`)**
+- **Configuration Layer** (`src/config/`) - Centralized settings and language configurations
+- **Type System** (`src/types/`) - Pydantic schemas and internal data models
+- **Utilities** (`src/utils/`) - Reusable audio processing, model loading, and logging utilities
+- **API Layer** (`src/api/`) - Clean separation of routes and application factory
+- **Environment Configuration** - Support for `.env` files and environment variables
+
+### **Core Features**
+1. **Model Loading** - Lazy loading of the AI model on first request
+2. **Audio Processing** - Built-in support for multiple audio formats  
+3. **Language Support** - 98+ languages with full name display in API docs
+4. **Error Handling** - Comprehensive error handling and logging
+5. **Configuration Management** - Environment-based configuration
 
 ---
 

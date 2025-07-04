@@ -22,6 +22,7 @@ help:
 	@echo ""
 	@echo "🚀 Deployment:"
 	@echo "  run-local      - Run service locally (development mode)"
+	@echo "  run-structured - Run structured application"
 	@echo "  deploy-local   - Deploy with Docker locally"
 	@echo "  docker-build   - Build Docker image"
 	@echo "  docker-run     - Run Docker container"
@@ -77,6 +78,10 @@ benchmark:
 run-local:
 	@echo "🚀 Starting local development server..."
 	./scripts/run-local.sh
+
+run-structured:
+	@echo "🚀 Starting structured application..."
+	python app_structured.py
 
 # Docker Operations
 docker-build:
