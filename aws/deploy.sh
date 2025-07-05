@@ -149,8 +149,8 @@ deploy_stack() {
             ServiceName="${SERVICE_NAME}" \
             ImageUri="${repository_uri}:latest" \
             Environment="${ENVIRONMENT}" \
-            Cpu="2048" \
-            Memory="4096" \
+            Cpu="256" \
+            Memory="512" \
             DesiredCount="1" \
         --capabilities CAPABILITY_IAM \
         --region "${AWS_REGION}"

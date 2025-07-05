@@ -41,18 +41,18 @@ print_free_tier_info() {
 display_free_tier_info() {
     echo ""
     echo "═══════════════════════════════════════════════════════════════"
-    print_free_tier_info "🆓 AWS FREE TIER DEPLOYMENT"
+    print_free_tier_info "💰 COST-OPTIMIZED DEPLOYMENT (10GB)"
     echo "═══════════════════════════════════════════════════════════════"
     print_free_tier_info "Resource Configuration:"
-    print_free_tier_info "  • CPU: 0.25 vCPU (256 units)"
-    print_free_tier_info "  • Memory: 0.5 GB (512 MiB)"
-    print_free_tier_info "  • ECS Fargate: 1000 hours/month free"
+    print_free_tier_info "  • CPU: 2 vCPU (2048 units)"
+    print_free_tier_info "  • Memory: 10 GB (10240 MiB)"
+    print_free_tier_info "  • ECS Fargate: ~$50-70/month (cost-optimized)"
     print_free_tier_info "  • ECR Storage: 500 MB free"
     print_free_tier_info "  • ALB: 750 hours/month free"
     print_free_tier_info "  • CloudWatch Logs: 5 GB/month free"
     echo ""
-    print_free_tier_info "⚠️  WARNING: This is a minimal configuration!"
-    print_free_tier_info "    The ML model may have limited performance."
+    print_free_tier_info "✅ OPTIMIZED: Sufficient resources for ML model!"
+    print_free_tier_info "    This should handle the indic-seamless model properly."
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 }
@@ -120,16 +120,19 @@ build_and_push_image() {
     local image_tag="free-tier"
     local full_image_name="${repository_uri}:${image_tag}"
     
-    print_status "Building optimized Docker image for free tier..." >&2
+    print_status "Building optimized Docker image for free tier (x86_64)..." >&2
     
-    # Build with optimization flags for smaller memory footprint
-    docker build \
+    # Build with optimization flags for smaller memory footprint and x86_64 platform
+    docker buildx build \
+        --platform linux/amd64 \
         --tag "${full_image_name}" \
         --build-arg OPTIMIZE_FOR_SIZE=true \
+        --load \
         . >&2
     
     print_status "Logging in to ECR..." >&2
-    aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${repository_uri}" >&2
+    local ecr_host=$(echo "${repository_uri}" | cut -d'/' -f1)
+    aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ecr_host}" >&2
     
     print_status "Pushing image to ECR..." >&2
     docker push "${full_image_name}" >&2
@@ -164,13 +167,13 @@ get_network_info() {
 
 # Deploy CloudFormation stack with free tier configuration
 deploy_stack() {
-    local repository_uri=$1
+    local image_uri=$1
     local network_info=$2
     
     local vpc_id=$(echo "${network_info}" | cut -d':' -f1)
     local subnet_ids=$(echo "${network_info}" | cut -d':' -f2)
     
-    print_status "Deploying CloudFormation stack with FREE TIER configuration..."
+    print_status "Deploying CloudFormation stack with COST-OPTIMIZED configuration (10GB)..."
     
     # Convert subnet IDs to comma-separated format for CloudFormation
     local subnet_array=$(echo "${subnet_ids}" | tr '\t' ',' | sed 's/,$//')
@@ -184,8 +187,8 @@ deploy_stack() {
             ServiceName="${SERVICE_NAME}" \
             ImageUri="${image_uri}" \
             Environment="${ENVIRONMENT}" \
-            Cpu="256" \
-            Memory="512" \
+            Cpu="2048" \
+            Memory="10240" \
             DesiredCount="1" \
             ContainerPort="8000" \
         --capabilities CAPABILITY_IAM \
@@ -212,9 +215,9 @@ wait_for_service() {
     local service_url=$1
     
     print_status "Waiting for service to be ready..."
-    print_warning "⏳ Free tier deployment may take longer due to limited resources..."
+    print_warning "⏳ Model loading may take several minutes with 10GB memory..."
     
-    local max_attempts=40  # Extended timeout for free tier
+    local max_attempts=20  # Reasonable timeout for 10GB deployment
     local attempt=1
     
     while [ ${attempt} -le ${max_attempts} ]; do
@@ -229,7 +232,7 @@ wait_for_service() {
     done
     
     print_error "Service failed to become ready within the expected time."
-    print_warning "This may be due to free tier resource limitations."
+    print_warning "Check CloudWatch logs for detailed errors."
     return 1
 }
 
@@ -239,15 +242,16 @@ display_cost_info() {
     echo "═══════════════════════════════════════════════════════════════"
     print_free_tier_info "💰 COST INFORMATION"
     echo "═══════════════════════════════════════════════════════════════"
-    print_free_tier_info "Current configuration should be FREE for 12 months!"
+    print_free_tier_info "Cost-optimized configuration (2 vCPU + 10GB):"
     print_free_tier_info ""
-    print_free_tier_info "Monthly usage (if running 24/7):"
-    print_free_tier_info "  • ECS Fargate: 720 hours (within 1000h free tier)"
-    print_free_tier_info "  • ECR Storage: <100 MB (within 500 MB free tier)"
-    print_free_tier_info "  • ALB: 720 hours (within 750h free tier)"
-    print_free_tier_info "  • CloudWatch Logs: ~1 GB (within 5 GB free tier)"
+    print_free_tier_info "Monthly cost breakdown (if running 24/7):"
+    print_free_tier_info "  • ECS Fargate (2 vCPU): ~$30-35/month"
+    print_free_tier_info "  • ECS Fargate (10GB mem): ~$20-25/month"
+    print_free_tier_info "  • ECR Storage: <$1/month (500 MB free)"
+    print_free_tier_info "  • ALB: Free (750 hours/month free tier)"
+    print_free_tier_info "  • CloudWatch Logs: Free (~1 GB within 5GB limit)"
     print_free_tier_info ""
-    print_free_tier_info "⚠️  After 12 months, estimated cost: ~$8-12/month"
+    print_free_tier_info "📊 Total estimated cost: ~$50-60/month"
     echo "═══════════════════════════════════════════════════════════════"
     echo ""
 }
@@ -255,7 +259,7 @@ display_cost_info() {
 # Main deployment function
 main() {
     display_free_tier_info
-    print_status "Starting FREE TIER deployment of ${SERVICE_NAME}..."
+    print_status "Starting COST-OPTIMIZED deployment of ${SERVICE_NAME}..."
     
     # Check prerequisites
     check_prerequisites
@@ -278,23 +282,23 @@ main() {
     # Wait for service to be ready
     if wait_for_service "${service_url}"; then
         echo ""
-        echo "🎉 FREE TIER DEPLOYMENT COMPLETED SUCCESSFULLY!"
+        echo "🎉 COST-OPTIMIZED DEPLOYMENT COMPLETED SUCCESSFULLY!"
         echo "═══════════════════════════════════════════════════════════════"
         print_status "Service URL: ${service_url}"
         print_status "Health check: ${service_url}/health"
         print_status "API documentation: ${service_url}/docs"
         print_status "Supported languages: ${service_url}/supported-languages"
         echo ""
-        print_warning "⚠️  Performance may be limited due to free tier resources"
-        print_warning "   Consider upgrading for production workloads"
+        print_status "✅ ML model should run properly with 10GB memory!"
+        print_warning "   Monitor costs - this is a paid deployment"
         echo ""
         display_cost_info
     else
-        print_error "❌ FREE TIER DEPLOYMENT FAILED!"
-        print_status "Common issues with free tier deployment:"
-        print_status "  • Model may not fit in 512 MB memory"
-        print_status "  • Consider using a smaller model variant"
+        print_error "❌ COST-OPTIMIZED DEPLOYMENT FAILED!"
+        print_status "Common troubleshooting steps:"
         print_status "  • Check CloudWatch logs for detailed errors"
+        print_status "  • Verify Docker image architecture (x86_64)"
+        print_status "  • Ensure HuggingFace token is valid"
         exit 1
     fi
 }
