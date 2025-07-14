@@ -24,11 +24,16 @@ model_state = ModelState()
 router = APIRouter()
 
 
-@router.on_event("startup")
-async def startup_event() -> None:
-    """Load model on startup."""
-    if not load_model(model_state):
-        logger.error("Failed to load model. Service may not function correctly.")
+def ensure_model_loaded() -> None:
+    """Ensure model is loaded (load on first request if needed)."""
+    if not model_state.is_ready():
+        logger.info("Model not loaded, loading now...")
+        if not load_model(model_state):
+            logger.error("Failed to load model")
+            raise HTTPException(
+                status_code=503,
+                detail="Failed to load model. Please try again later.",
+            )
 
 
 @router.get("/", tags=["Info"])
@@ -52,6 +57,13 @@ async def root() -> dict:
 @router.get("/health", response_model=HealthResponse, tags=["Health"])
 async def health_check() -> HealthResponse:
     """Health check endpoint."""
+    # Try to load model if not already loaded
+    try:
+        ensure_model_loaded()
+    except HTTPException:
+        # Model loading failed, but we still return health info
+        pass
+
     return HealthResponse(
         status="healthy",
         model_loaded=model_state.is_ready(),
@@ -86,12 +98,8 @@ async def speech_to_text(
 ) -> STTResponse:
     """Convert speech to text (ASR)."""
     try:
-        # Check if model is loaded
-        if not model_state.is_ready():
-            raise HTTPException(
-                status_code=503,
-                detail="Model not loaded. Please try again later.",
-            )
+        # Ensure model is loaded (load on first request if needed)
+        ensure_model_loaded()
 
         # Type assertions for linter - guaranteed by is_ready() check
         assert model_state.model is not None

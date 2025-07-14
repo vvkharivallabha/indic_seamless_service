@@ -38,23 +38,27 @@ make help
 ### **🔧 Option 2: Manual Setup**
 
 1. **Set up your environment:**
+
    ```bash
    cd env
    ./setup.sh
    ```
+
    This will install uv (if needed), create a virtual environment, and install all dependencies.
 
 2. **Configure environment variables (Important for gated models!):**
+
    ```bash
    # Create .env file from template
    cp env.example .env
-   
+
    # Edit .env and add your HuggingFace token
    nano .env
    # Set: HF_TOKEN=your_huggingface_token
    ```
 
 3. **To activate the environment later:**
+
    ```bash
    source env/.venv/bin/activate
    # or use the helper script
@@ -62,11 +66,13 @@ make help
    ```
 
 4. **Start the service:**
+
    ```bash
    python start_service.py      # Production launcher
    # or with custom port
    python start_service.py --port 8001
    ```
+
    The service will start on `http://localhost:8000`
 
 5. **Test the service:**
@@ -81,6 +87,7 @@ make help
 The `ai4bharat/indic-seamless` model is gated and requires authentication:
 
 1. **Get HuggingFace Access:**
+
    - Visit: https://huggingface.co/ai4bharat/indic-seamless
    - Request access to the model
    - Get your token from: https://huggingface.co/settings/tokens
@@ -88,6 +95,7 @@ The `ai4bharat/indic-seamless` model is gated and requires authentication:
 2. **Configure Authentication (Choose one method):**
 
    **Method 1: Using .env file (Recommended)**
+
    ```bash
    make setup-env
    nano .env
@@ -95,6 +103,7 @@ The `ai4bharat/indic-seamless` model is gated and requires authentication:
    ```
 
    **Method 2: Using huggingface-cli**
+
    ```bash
    source env/.venv/bin/activate
    huggingface-cli login
@@ -114,6 +123,7 @@ The `ai4bharat/indic-seamless` model is gated and requires authentication:
 This project uses [uv](https://github.com/astral-sh/uv) for **both virtual environment management and package installation**:
 
 ### Benefits:
+
 - **10-100x faster** than pip for package installation
 - **Blazing fast virtual environment creation** (seconds instead of minutes)
 - **Better dependency resolution** with fewer conflicts
@@ -123,6 +133,7 @@ This project uses [uv](https://github.com/astral-sh/uv) for **both virtual envir
 - **No conda needed** - simplified toolchain
 
 ### uv Commands:
+
 ```bash
 # Create virtual environment
 uv venv .venv --python 3.10
@@ -144,6 +155,7 @@ uv cache clean
 ```
 
 ### Environment Management:
+
 ```bash
 # Activate virtual environment
 source env/.venv/bin/activate
@@ -159,16 +171,17 @@ source env/activate.sh
 
 ## 📋 API Endpoints
 
-| Endpoint                | Method | Description                |
-|------------------------|--------|----------------------------|
-| `/`                    | GET    | Service information        |
-| `/health`              | GET    | Health check               |
-| `/supported-languages` | GET    | List supported languages   |
-| `/speech-to-text`      | POST   | Convert speech to text     |
+| Endpoint               | Method | Description              |
+| ---------------------- | ------ | ------------------------ |
+| `/`                    | GET    | Service information      |
+| `/health`              | GET    | Health check             |
+| `/supported-languages` | GET    | List supported languages |
+| `/speech-to-text`      | POST   | Convert speech to text   |
 
 ### Example: Speech-to-Text
 
 **Python:**
+
 ```python
 import requests
 with open('audio.wav', 'rb') as audio_file:
@@ -179,6 +192,7 @@ with open('audio.wav', 'rb') as audio_file:
 ```
 
 **cURL:**
+
 ```bash
 curl -X POST "http://localhost:8000/speech-to-text" \
   -F "audio=@audio.wav" \
@@ -214,6 +228,7 @@ curl -X POST "http://localhost:8000/speech-to-text" \
 > 🔧 **Docker Issues?** See [`DOCKER_TROUBLESHOOTING.md`](DOCKER_TROUBLESHOOTING.md) for solutions.
 
 ### Docker Deployment
+
 ```bash
 # Automated Docker deployment
 ./scripts/deploy-local.sh
@@ -224,6 +239,7 @@ docker run -p 8000:5000 indic-seamless-stt
 ```
 
 ### Direct Python (Development)
+
 ```bash
 # For development without Docker
 ./scripts/run-local.sh
@@ -237,7 +253,23 @@ python start_service.py
 
 ## ☁️ AWS & SageMaker Deployment
 
+### AWS Lambda (Serverless) ⚡
+
+```bash
+# Set HuggingFace token
+export HF_TOKEN="your_token_here"
+
+# Deploy to Lambda
+./aws/lambda/deploy-lambda.sh
+
+# Test deployment
+curl https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/health
+```
+
+📋 **Lambda Guide**: See [`LAMBDA_DEPLOYMENT.md`](docs/LAMBDA_DEPLOYMENT.md) for complete Lambda deployment instructions.
+
 ### ECS with CloudFormation
+
 ```bash
 aws cloudformation create-stack \
   --stack-name indic-seamless-stt \
@@ -246,6 +278,7 @@ aws cloudformation create-stack \
 ```
 
 ### ECS with Terraform
+
 ```bash
 cd terraform
 terraform init
@@ -254,6 +287,7 @@ terraform apply
 ```
 
 ### SageMaker
+
 ```bash
 python sagemaker/deploy.py
 ```
@@ -263,6 +297,7 @@ python sagemaker/deploy.py
 ## 🔧 Troubleshooting
 
 ### Quick Fixes
+
 ```bash
 # Fix common dependency issues
 make fix-deps
@@ -281,17 +316,21 @@ make clean setup
 ```
 
 ### Common Issues
+
 1. **Missing dependencies** (uvicorn, torch, python-multipart)
+
    ```bash
    make fix-deps
    ```
 
 2. **Virtual environment not found**
+
    ```bash
    make setup
    ```
 
 3. **Model loading fails** (authentication issue)
+
    ```bash
    make setup-env
    # Edit .env and set HF_TOKEN=your_token
@@ -299,6 +338,7 @@ make clean setup
    ```
 
 4. **Service won't start**
+
    ```bash
    python start_service.py --check-only
    lsof -i :8000
@@ -310,6 +350,7 @@ make clean setup
    - Ensure audio has speech content
 
 **Debug mode:**
+
 ```bash
 export DEBUG=true
 python start_service.py
@@ -323,10 +364,10 @@ python start_service.py
 
 > 📋 **Quick Reference**: See [`WORKFLOWS.md`](WORKFLOWS.md) for a printable workflow cheat sheet.
 
-
 ### **Development Workflow**
 
 #### Initial Setup (One-time)
+
 ```bash
 # Clone and setup environment
 git clone <repository-url>
@@ -335,6 +376,7 @@ cd env && ./setup.sh
 ```
 
 #### Daily Development
+
 ```bash
 # Activate environment
 source env/.venv/bin/activate
@@ -349,6 +391,7 @@ python tests/workflow_test.py
 ```
 
 #### Environment Management
+
 ```bash
 # Check environment status
 make check-deps
@@ -368,6 +411,7 @@ python benchmark.py
 ### **Local Testing Workflow**
 
 #### Test Docker Build Locally
+
 ```bash
 # Build and run with Docker
 ./scripts/deploy-local.sh
@@ -383,6 +427,7 @@ docker stop indic-seamless-local
 ```
 
 #### Manual Docker Testing
+
 ```bash
 # Build image
 docker build -t indic-seamless-service:latest .
@@ -400,7 +445,24 @@ python examples/client_example.py
 
 ### **Production Deployment Workflow**
 
+#### AWS Lambda Deployment (Serverless)
+
+```bash
+# Set HuggingFace token
+export HF_TOKEN="your_token_here"
+
+# Deploy to Lambda
+./aws/lambda/deploy-lambda.sh
+
+# Test deployment
+curl https://your-api-id.execute-api.us-east-1.amazonaws.com/prod/health
+
+# View logs
+./aws/lambda/deploy-lambda.sh logs
+```
+
 #### AWS ECS Deployment
+
 ```bash
 # Deploy to AWS
 cd aws
@@ -416,6 +478,7 @@ aws logs tail /ecs/indic-seamless-service --follow
 ```
 
 #### Terraform Deployment
+
 ```bash
 # Initialize and deploy
 cd terraform
@@ -428,6 +491,7 @@ terraform output service_url
 ```
 
 #### SageMaker Deployment
+
 ```bash
 # Deploy to SageMaker
 cd sagemaker
@@ -440,6 +504,7 @@ python test_endpoint.py
 ### **Maintenance Workflow**
 
 #### Environment Updates
+
 ```bash
 # Activate environment
 source env/.venv/bin/activate
@@ -454,6 +519,7 @@ python workflow_test.py
 ```
 
 #### Performance Monitoring
+
 ```bash
 # Run performance benchmark
 source env/.venv/bin/activate
@@ -464,6 +530,7 @@ curl http://localhost:8000/health
 ```
 
 #### Troubleshooting
+
 ```bash
 # Check environment
 source env/.venv/bin/activate
@@ -481,6 +548,7 @@ tail -f logs/service.log
 ### **CI/CD Integration**
 
 #### GitHub Actions Example
+
 ```yaml
 name: Test and Deploy
 on: [push, pull_request]
@@ -502,6 +570,7 @@ jobs:
 ```
 
 #### Pre-commit Hooks
+
 ```bash
 # Install pre-commit
 uv pip install pre-commit
@@ -585,6 +654,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## 📋 Quick Reference
 
 ### Common Commands
+
 ```bash
 # Environment setup
 cd env && ./setup.sh
@@ -613,6 +683,7 @@ make check-deps
 ```
 
 ### Environment Variables
+
 ```bash
 export DEBUG=true          # Enable debug logging
 export PORT=8001           # Custom port
@@ -620,6 +691,7 @@ export MODEL_CACHE_DIR=./models  # Model cache directory
 ```
 
 ### Useful URLs
+
 - **Service**: http://localhost:8000
 - **API Docs**: http://localhost:8000/docs
 - **Health Check**: http://localhost:8000/health
@@ -630,4 +702,4 @@ export MODEL_CACHE_DIR=./models  # Model cache directory
 - Check the troubleshooting guide
 - Review the test scripts
 - Open an issue on GitHub
-- Contact the development team 
+- Contact the development team
