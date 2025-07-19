@@ -3,7 +3,6 @@ Model loading and processing utilities
 """
 
 import logging
-import os
 from typing import Any, Optional, Tuple
 
 import torch
@@ -64,7 +63,7 @@ def load_model() -> Tuple[SeamlessM4Tv2ForSpeechToText, Any, Any, str]:
         logger.info("✅ Tokenizer loaded")
 
         logger.info("📥 Loading main model with memory optimizations...")
-        logger.info("🔧 Using: CPU offloading, low memory usage, half precision")
+        logger.info("🔧 Using: CPU offloading, low memory usage, optimized allocation")
 
         # Memory optimization parameters
         model_kwargs = {
@@ -73,17 +72,22 @@ def load_model() -> Tuple[SeamlessM4Tv2ForSpeechToText, Any, Any, str]:
             "torch_dtype": (
                 torch.float16 if device == "cuda" else torch.float32
             ),  # Half precision on GPU
-            "device_map": "auto",  # Auto device mapping
         }
 
-        # Add CPU offloading if on CPU or low memory
+        # Add memory-efficient loading for CPU
         if device == "cpu":
-            # Create offload directory
-            offload_dir = "/tmp/model_offload"
-            os.makedirs(offload_dir, exist_ok=True)
-            model_kwargs["offload_folder"] = offload_dir
-            model_kwargs["max_memory"] = {0: "1GB", "cpu": "1GB"}  # Limit memory usage
-            logger.info(f"💾 CPU offloading enabled to: {offload_dir}")
+            # For CPU, use sequential loading without aggressive offloading
+            model_kwargs.update(
+                {
+                    "device_map": "cpu",  # Keep on CPU
+                    "max_memory": {"cpu": "1.5GB"},  # Allow more CPU memory
+                }
+            )
+            logger.info("💾 CPU optimization: Sequential loading with 1.5GB limit")
+        else:
+            # For GPU, use auto device mapping
+            model_kwargs["device_map"] = "auto"
+            logger.info("🚀 GPU optimization: Auto device mapping")
 
         model = SeamlessM4Tv2ForSpeechToText.from_pretrained(
             settings.model_name, **model_kwargs
