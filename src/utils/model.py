@@ -63,47 +63,62 @@ def load_model() -> Tuple[SeamlessM4Tv2ForSpeechToText, Any, Any, str]:
         )
         logger.info("✅ Tokenizer loaded")
 
-        logger.info("📥 Loading main model with aggressive memory optimizations...")
-        logger.info("🔧 Using: Disk offloading, state dict offloading, minimal memory")
+        logger.info("📥 Loading main model with HF Spaces optimizations...")
+        logger.info("🔧 Using: Auto device mapping, efficient loading for cloud")
 
-        # Create offload directory for model parts
-        offload_dir = "/tmp/model_offload"
-        os.makedirs(offload_dir, exist_ok=True)
-        logger.info(f"💾 Offload directory: {offload_dir}")
+        # Detect if running on HF Spaces
+        is_hf_spaces = os.environ.get("SPACE_ID") is not None
 
-        # Most aggressive memory optimization parameters
-        model_kwargs = {
-            "trust_remote_code": settings.trust_remote_code,
-            "low_cpu_mem_usage": True,  # Reduce CPU memory during loading
-            "torch_dtype": torch.float32,  # Keep as float32 for stability
-            "offload_folder": offload_dir,  # Offload to disk
-            "offload_state_dict": True,  # Offload state dict to disk
-            "device_map": "cpu",  # Use CPU
-        }
+        if is_hf_spaces:
+            logger.info("🤗 Detected HF Spaces environment - using optimized settings")
+            # HF Spaces provides more memory and GPU access
+            model_kwargs = {
+                "trust_remote_code": settings.trust_remote_code,
+                "device_map": "auto",  # Let HF Spaces auto-assign devices
+                "torch_dtype": torch.float16,  # Use half precision for efficiency
+                "low_cpu_mem_usage": True,
+            }
+        else:
+            logger.info("☁️ Cloud environment detected - using memory optimizations")
+            # Create offload directory for model parts
+            offload_dir = "/tmp/model_offload"
+            os.makedirs(offload_dir, exist_ok=True)
+            logger.info(f"💾 Offload directory: {offload_dir}")
+
+            # Aggressive memory optimization for limited environments
+            model_kwargs = {
+                "trust_remote_code": settings.trust_remote_code,
+                "low_cpu_mem_usage": True,
+                "torch_dtype": torch.float32,
+                "offload_folder": offload_dir,
+                "offload_state_dict": True,
+                "device_map": "cpu",
+            }
 
         try:
             model = SeamlessM4Tv2ForSpeechToText.from_pretrained(
                 settings.model_name, **model_kwargs
             )
         except Exception as e:
-            logger.warning(f"Failed with disk offloading: {e}")
-            logger.info(
-                "🔄 Trying alternative approach with manual memory management..."
-            )
+            if not is_hf_spaces:
+                logger.warning(f"Failed with optimizations: {e}")
+                logger.info("🔄 Trying fallback approach...")
 
-            # Alternative: try loading without memory mapping
-            model_kwargs = {
-                "trust_remote_code": settings.trust_remote_code,
-                "low_cpu_mem_usage": True,
-                "torch_dtype": torch.float32,
-                "device_map": {"": "cpu"},  # Force everything to CPU
-                "load_in_8bit": False,  # Disable quantization
-                "offload_folder": offload_dir,
-            }
+                # Fallback for very limited memory environments
+                model_kwargs = {
+                    "trust_remote_code": settings.trust_remote_code,
+                    "low_cpu_mem_usage": True,
+                    "torch_dtype": torch.float32,
+                    "device_map": {"": "cpu"},
+                    "offload_folder": offload_dir,
+                }
 
-            model = SeamlessM4Tv2ForSpeechToText.from_pretrained(
-                settings.model_name, **model_kwargs
-            )
+                model = SeamlessM4Tv2ForSpeechToText.from_pretrained(
+                    settings.model_name, **model_kwargs
+                )
+            else:
+                # Re-raise on HF Spaces as it should work
+                raise
 
         logger.info("✅ Main model loaded with optimizations")
 
