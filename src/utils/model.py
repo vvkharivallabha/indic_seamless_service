@@ -3,7 +3,8 @@ Model loading and processing utilities
 """
 
 import logging
-import traceback
+import os
+from typing import Any, Optional, Tuple
 
 import torch
 from transformers import (
@@ -13,30 +14,41 @@ from transformers import (
 )
 
 from src.config.settings import settings
-from src.types import ModelState
 
 logger = logging.getLogger(__name__)
 
 
-def load_model(model_state: ModelState) -> bool:
-    """
-    Load the indic-seamless model and update model state.
+class ModelState:
+    """Global model state to avoid reloading."""
 
-    Args:
-        model_state: ModelState object to update
+    def __init__(self):
+        self.model: Optional[SeamlessM4Tv2ForSpeechToText] = None
+        self.processor: Optional[SeamlessM4TFeatureExtractor] = None
+        self.tokenizer: Optional[SeamlessM4TTokenizer] = None
+        self.device: Optional[str] = None
+
+
+# Global model state
+model_state = ModelState()
+
+
+def get_optimal_device() -> str:
+    """Get the optimal device for inference."""
+    if torch.cuda.is_available():
+        return "cuda"
+    return "cpu"
+
+
+def load_model() -> Tuple[SeamlessM4Tv2ForSpeechToText, Any, Any, str]:
+    """
+    Load the SeamlessM4T model with memory optimizations.
 
     Returns:
-        True if model loaded successfully, False otherwise
+        Tuple of (model, processor, tokenizer, device)
     """
     try:
-        logger.info("Loading indic-seamless model...")
-        logger.info("⏳ This may take several minutes for first-time download...")
-
-        # Set device
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        logger.info(f"Using device: {device}")
-
-        # Load model components
+        device = get_optimal_device()
+        logger.info(f"🎯 Using device: {device}")
         logger.info(f"Loading model from: {settings.model_name}")
 
         logger.info("📥 Loading feature extractor...")
@@ -51,34 +63,55 @@ def load_model(model_state: ModelState) -> bool:
         )
         logger.info("✅ Tokenizer loaded")
 
-        logger.info("📥 Loading main model (this is the largest component)...")
-        model = SeamlessM4Tv2ForSpeechToText.from_pretrained(
-            settings.model_name, trust_remote_code=settings.trust_remote_code
-        )
-        logger.info("✅ Main model loaded")
+        logger.info("📥 Loading main model with memory optimizations...")
+        logger.info("🔧 Using: CPU offloading, low memory usage, half precision")
 
-        # Move model to device
-        logger.info(f"📤 Moving model to {device}...")
-        model = model.to(device)  # type: ignore[assignment]
+        # Memory optimization parameters
+        model_kwargs = {
+            "trust_remote_code": settings.trust_remote_code,
+            "low_cpu_mem_usage": True,  # Reduce CPU memory during loading
+            "torch_dtype": (
+                torch.float16 if device == "cuda" else torch.float32
+            ),  # Half precision on GPU
+            "device_map": "auto",  # Auto device mapping
+        }
+
+        # Add CPU offloading if on CPU or low memory
+        if device == "cpu":
+            # Create offload directory
+            offload_dir = "/tmp/model_offload"
+            os.makedirs(offload_dir, exist_ok=True)
+            model_kwargs["offload_folder"] = offload_dir
+            model_kwargs["max_memory"] = {0: "1GB", "cpu": "1GB"}  # Limit memory usage
+            logger.info(f"💾 CPU offloading enabled to: {offload_dir}")
+
+        model = SeamlessM4Tv2ForSpeechToText.from_pretrained(
+            settings.model_name, **model_kwargs
+        )
+        logger.info("✅ Main model loaded with optimizations")
+
+        # Don't move to device if using device_map="auto"
+        if "device_map" not in model_kwargs or model_kwargs["device_map"] != "auto":
+            logger.info(f"📤 Moving model to {device}...")
+            model = model.to(device)  # type: ignore[assignment]
+
         model.eval()
-        logger.info("✅ Model moved to device and set to eval mode")
+        logger.info("✅ Model set to eval mode")
 
         # Update model state
         model_state.model = model
         model_state.processor = processor
         model_state.tokenizer = tokenizer
         model_state.device = device
-        model_state.is_loaded = True
 
-        logger.info("🎉 Model loaded successfully!")
-        return True
+        logger.info("🎉 Model loading completed successfully!")
+        return model, processor, tokenizer, device
 
     except Exception as e:
-        logger.error(f"💥 Error loading model: {str(e)}")
-        logger.error(f"Error type: {type(e).__name__}")
-        logger.error(traceback.format_exc())
-        model_state.reset()
-        return False
+        logger.error("💥 Error loading model: %s", str(e))
+        logger.error("Error type: %s", type(e).__name__)
+        logger.error("Traceback:", exc_info=True)
+        raise
 
 
 def safe_decode_tokens(

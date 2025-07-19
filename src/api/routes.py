@@ -12,13 +12,11 @@ from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
 from src.config import LANGUAGE_NAME_TO_CODE, SUPPORTED_LANGUAGES, TargetLanguage
 from src.config.settings import settings
-from src.types import HealthResponse, LanguagesResponse, ModelState, STTResponse
-from src.utils import allowed_file, load_model, preprocess_audio
+from src.types import HealthResponse, LanguagesResponse, STTResponse
+from src.utils import allowed_file, preprocess_audio
+from src.utils.model import load_model, model_state
 
 logger = logging.getLogger(__name__)
-
-# Global model state
-model_state = ModelState()
 
 # Create router
 router = APIRouter()
@@ -26,14 +24,27 @@ router = APIRouter()
 
 def ensure_model_loaded() -> None:
     """Ensure model is loaded (load on first request if needed)."""
-    if not model_state.is_ready():
+    if model_state.model is None:
         logger.info("Model not loaded, loading now...")
-        if not load_model(model_state):
-            logger.error("Failed to load model")
+        try:
+            load_model()
+            logger.info("✅ Model loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load model: {e}")
             raise HTTPException(
                 status_code=503,
                 detail="Failed to load model. Please try again later.",
             )
+
+
+def is_model_ready() -> bool:
+    """Check if model is ready for inference."""
+    return (
+        model_state.model is not None
+        and model_state.processor is not None
+        and model_state.tokenizer is not None
+        and model_state.device is not None
+    )
 
 
 @router.get("/", tags=["Info"])
@@ -66,7 +77,7 @@ async def health_check() -> HealthResponse:
 
     return HealthResponse(
         status="healthy",
-        model_loaded=model_state.is_ready(),
+        model_loaded=is_model_ready(),
         device=str(model_state.device) if model_state.device else None,
         supported_languages=SUPPORTED_LANGUAGES,
     )
@@ -137,8 +148,12 @@ async def speech_to_text(
             os.unlink(temp_file.name)
 
         # Prepare input using feature extractor for audio
+        # Convert tensor to numpy array for processor
+        audio_array = (
+            audio_data.numpy() if isinstance(audio_data, torch.Tensor) else audio_data
+        )
         inputs = model_state.processor(
-            audio_data, sampling_rate=sr, return_tensors="pt"
+            audio_array, sampling_rate=sr, return_tensors="pt"
         ).to(model_state.device)
 
         # Generate transcription using the correct method for SeamlessM4Tv2
